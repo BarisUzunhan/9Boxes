@@ -1,0 +1,100 @@
+[
+  {
+    "id": 1777232682075,
+    "word": "kayeği",
+    "status": "rejected",
+    "createdAt": "2026-04-26T19:44:42.075Z",
+    "resolvedAt": "2026-04-26T19:46:14.536Z"
+  },
+  {
+    "id": 1777232683465,
+    "word": "aikel",
+    "status": "rejected",
+    "createdAt": "2026-04-26T19:44:43.465Z",
+    "resolvedAt": "2026-04-26T19:46:19.232Z"
+  },
+  {
+    "id": 1777706068831,
+    "word": "katip",
+    "status": "approved",
+    "createdAt": "2026-05-02T07:14:28.831Z",
+    "resolvedAt": "2026-05-04T08:52:51.622Z"
+  },
+  {
+    "id": 1777707660929,
+    "word": "roma",
+    "status": "approved",
+    "createdAt": "2026-05-02T07:41:00.929Z",
+    "resolvedAt": "2026-05-04T08:52:53.956Z"
+  },
+  {
+    "id": 1777708654054,
+    "word": "pot",
+    "status": "pending",
+    "createdAt": "2026-05-02T07:57:34.054Z",
+    "resolvedAt": null
+  },
+  {
+    "id": 1777711996241,
+    "word": "rumen",
+    "status": "pending",
+    "createdAt": "2026-05-02T08:53:16.241Z",
+    "resolvedAt": null
+  },
+  {
+    "id": 1777711996827,
+    "word": "rum",
+    "status": "approved",
+    "createdAt": "2026-05-02T08:53:16.827Z",
+    "resolvedAt": "2026-05-04T08:52:46.538Z"
+  },
+  {
+    "id": 1777711998672,
+    "word": "emre",
+    "status": "pending",
+    "createdAt": "2026-05-02T08:53:18.672Z",
+    "resolvedAt": null
+  },
+  {
+    "id": 1777712356634,
+    "word": "erkan",
+    "status": "pending",
+    "createdAt": "2026-05-02T08:59:16.634Z",
+    "resolvedAt": null
+  },
+  {
+    "id": 1777884701142,
+    "word": "önal",
+    "status": "rejected",
+    "createdAt": "2026-05-04T08:51:41.142Z",
+    "resolvedAt": "2026-05-04T08:52:39.193Z"
+  },
+  {
+    "id": 1777910155521,
+    "word": "akat",
+    "status": "pending",
+    "createdAt": "2026-05-04T15:55:55.521Z",
+    "resolvedAt": null
+  },
+  {
+    "id": 1777910289766,
+    "word": "akya",
+    "status": "pending",
+    "createdAt": "2026-05-04T15:58:09.766Z",
+    "resolvedAt": null
+  },
+  {
+    "id": 1777910301230,
+    "word": "trakya",
+    "status": "pending",
+    "createdAt": "2026-05-04T15:58:21.230Z",
+    "resolvedAt": null
+  },
+  {
+    "id": 1777910306956,
+    "word": "konya",
+    "status": "pending",
+    "createdAt": "2026-05-04T15:58:26.956Z",
+    "resolvedAt": null
+  }
+]

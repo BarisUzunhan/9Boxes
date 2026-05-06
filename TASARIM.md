@@ -186,6 +186,23 @@ Verbum9/
 
 ## Sürüm Geçmişi
 
+### v1.4 — 2026-04-28
+- Giriş / Kayıt ekranı eklendi (bcryptjs şifre hashleme, token tabanlı oturum, localStorage).
+- Ana lobi yeniden tasarlandı: oyun modu kartları (Tek Oyunculu, 1v1, Günlük, Çoklu).
+- Kullanıcı profil popup'ı eklendi: seviye, toplam puan, KL bakiyesi, oyun istatistikleri, çıkış yapma.
+- Kullanıcı verileri `data/users.json`'da saklanıyor; sunucu `/api/auth/register`, `/api/auth/login`, `/api/auth/me` rotaları.
+- Sunucu başlarken yerel ağ IP adresini yazar (telefon bağlantısı için).
+
+### v1.3 — 2026-04-26
+- Kullanıcı itiraz sistemi tamamlandı: geçersiz kelimelerin yanına "İtiraz Et" düğmesi eklendi (hem oyun sırasındaki kelimeler panelinde hem de sonuç ekranında).
+- `POST /api/disputes` ile itiraz kaydedilir; `/admin` panelinin İtirazlar sekmesinden onaylanabilir/reddedilebilir.
+- Onaylanan itirazlar otomatik olarak `words.json`'a eklenir.
+
+### v1.2 — 2026-04-26
+- Geri sayım sırasında matris görünür hale getirildi (overlay yaklaşımı).
+- `/admin` sesteş kelime yönetim paneli eklendi (ekleme/silme, words.json'a yazılır).
+- Oyun sonunda "Diğer Kelimeler" düğmesiyle kaçırılan kelimelerin listesi gösterildi.
+
 ### v1.1 — 2026-04-26
 - Sözlük TDK kaynaklı mertemin/turkish-word-list ile güncellendi: 686 → 46.819 kelime.
 - Çok kelimeli ifadeler, özel isimler, rakam/noktalama içeren kelimeler filtrelendi.

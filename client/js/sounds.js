@@ -1,4 +1,7 @@
 let ctx = null;
+let _enabled = true;
+
+export function setSoundEnabled(v) { _enabled = v; }
 
 function audio() {
   if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -6,6 +9,7 @@ function audio() {
 }
 
 function tone(freq, duration, type = 'sine', volume = 0.25) {
+  if (!_enabled) return;
   const ac = audio();
   const osc = ac.createOscillator();
   const gain = ac.createGain();
@@ -20,6 +24,7 @@ function tone(freq, duration, type = 'sine', volume = 0.25) {
 }
 
 export function playWordFound() {
+  if (!_enabled) return;
   const ac = audio();
   const osc = ac.createOscillator();
   const gain = ac.createGain();

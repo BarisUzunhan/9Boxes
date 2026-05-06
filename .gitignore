@@ -5,3 +5,5 @@ _docx_extracted/
 verbum9_text.txt
 ~$*
 ~WRL*
+server/users.json
+data/users.json

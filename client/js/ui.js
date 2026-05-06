@@ -35,14 +35,29 @@ export function updateFillCell() {
   document.getElementById('btn-start-game').disabled = !matrixComplete();
 }
 
-// ─── Geri Sayım Overlay ──────────────────────────────────────
+// ─── Geri Sayım — timer kutusunda gösterilir, overlay yok ────
 
 export function showCountdownOverlay(visible) {
-  document.getElementById('countdown-overlay').hidden = !visible;
+  document.getElementById('countdown-overlay').hidden = true;
+  const timerEl = document.getElementById('game-timer');
+  timerEl.classList.toggle('countdown-mode', visible);
+  if (!visible) {
+    timerEl.classList.remove('countdown-mode');
+    timerEl.getAnimations().forEach(a => a.cancel()); // animasyon birikimini temizle
+  }
 }
 
 export function updateCountdown(n) {
-  document.getElementById('countdown-number').textContent = n;
+  const timerEl = document.getElementById('game-timer');
+  timerEl.textContent = n;
+  timerEl.classList.add('countdown-mode');
+  // Büyük çıkıp timer boyutuna yerleş
+  timerEl.animate([
+    { fontSize: 'clamp(4rem, 22vw, 7rem)', transform: 'scale(1.6)', opacity: 0.9,
+      textShadow: '0 0 40px rgba(233,69,96,0.9)' },
+    { fontSize: '2.4rem',                  transform: 'scale(1)',   opacity: 1,
+      textShadow: '0 0 12px rgba(233,69,96,0.5)' },
+  ], { duration: 900, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
 }
 
 // ─── Oyun Matrisi ────────────────────────────────────────────
@@ -134,6 +149,12 @@ export function addWordToPanel(wordObj) {
     pts.className = 'word-points';
     pts.textContent = `+${wordObj.points}`;
     li.appendChild(pts);
+  } else {
+    const btn = document.createElement('button');
+    btn.className = 'btn-dispute';
+    btn.dataset.word = wordObj.word.toLocaleLowerCase('tr-TR');
+    btn.textContent = 'İtiraz Et';
+    li.appendChild(btn);
   }
 
   list.insertBefore(li, list.firstChild);
@@ -156,19 +177,29 @@ export function renderResult(missedWords = []) {
       pts.className = 'word-points';
       pts.textContent = `+${w.points}`;
       li.appendChild(pts);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'btn-dispute';
+      btn.dataset.word = w.word.toLocaleLowerCase('tr-TR');
+      btn.textContent = 'İtiraz Et';
+      li.appendChild(btn);
     }
     list.appendChild(li);
   });
 
-  // Kaçırılan kelimeler — başta gizli, düğmeyle açılır
+  // Kaçırılan kelimeler — her zaman göster
   const missedSection = document.getElementById('result-missed-section');
   const missedList = document.getElementById('result-missed-list');
-  missedSection.hidden = true;
   missedList.innerHTML = '';
+  missedSection.hidden = false;
 
   if (missedWords.length > 0) {
-    document.getElementById('result-missed-count').textContent = missedWords.length + ' kelime';
-    missedWords.forEach(word => {
+    const display = missedWords.slice(0, 100);
+    const countLabel = missedWords.length > 100
+      ? `${missedWords.length} kelime (ilk 100 gösteriliyor)`
+      : `${missedWords.length} kelime`;
+    document.getElementById('result-missed-count').textContent = countLabel;
+    display.forEach(word => {
       const li = document.createElement('li');
       li.className = 'valid';
       li.appendChild(document.createTextNode(word));
@@ -178,9 +209,14 @@ export function renderResult(missedWords = []) {
       li.appendChild(pts);
       missedList.appendChild(li);
     });
+  } else {
+    document.getElementById('result-missed-count').textContent = '';
+    const li = document.createElement('li');
+    li.className = 'valid';
+    li.style.opacity = '0.5';
+    li.textContent = 'Tüm kelimeler bulundu!';
+    missedList.appendChild(li);
   }
-
-  document.getElementById('btn-show-missed').hidden = missedWords.length === 0;
 }
 
 // ─── Kelimeler Paneli Toggle ─────────────────────────────────

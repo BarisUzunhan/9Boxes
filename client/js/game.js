@@ -15,6 +15,9 @@ const LETTER_POOL =
 const GAME_DURATION = 180;
 const COUNTDOWN_START = 5;
 
+let currentDuration = GAME_DURATION;
+export function setGameDuration(d) { currentDuration = d; }
+
 export const state = {
   phase: PHASES.LOBBY,
   matrix: Array(9).fill(''),
@@ -43,6 +46,15 @@ export function addLetterToWord(cellIndex) {
   if (!state.matrix[cellIndex]) return false;
   state.currentWordCells.push(cellIndex);
   return true;
+}
+
+export function addLetterByChar(upperChar) {
+  for (let i = 0; i < 9; i++) {
+    if (state.matrix[i] === upperChar && !state.currentWordCells.includes(i)) {
+      return addLetterToWord(i);
+    }
+  }
+  return false;
 }
 
 export function removeLastLetter() {
@@ -102,7 +114,7 @@ export function startCountdown(onTick, onDone) {
 
 export function startGame(onTimerTick, onGameEnd) {
   state.phase = PHASES.PLAYING;
-  state.timeLeft = GAME_DURATION;
+  state.timeLeft = currentDuration;
   state.score = 0;
   state.submittedWords = [];
   clearCurrentWord();
@@ -129,6 +141,23 @@ export function stopGame() {
   if (state._timerInterval) clearInterval(state._timerInterval);
 }
 
+// Ekran açıldığında kalan süreyle interval'ı yeniden başlat
+export function restartTimer(seconds, onTimerTick, onGameEnd) {
+  if (state._timerInterval) clearInterval(state._timerInterval);
+  state.timeLeft = seconds;
+  state._timerInterval = setInterval(() => {
+    state.timeLeft--;
+    onTimerTick(state.timeLeft);
+    if (state.timeLeft === 20 || state.timeLeft === 15) playWarningBeep();
+    else if (state.timeLeft > 0 && state.timeLeft <= 10) playUrgentBeep();
+    if (state.timeLeft <= 0) {
+      clearInterval(state._timerInterval);
+      state.phase = PHASES.RESULT;
+      onGameEnd();
+    }
+  }, 1000);
+}
+
 export function resetToFill() {
   stopGame();
   state.phase = PHASES.FILL;
@@ -137,7 +166,7 @@ export function resetToFill() {
   state.currentWordCells = [];
   state.submittedWords = [];
   state.score = 0;
-  state.timeLeft = GAME_DURATION;
+  state.timeLeft = currentDuration;
 }
 
 export function formatTime(seconds) {

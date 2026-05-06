@@ -4,44 +4,152 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Verbum9</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=0.5">
 </head>
 <body>
 
-  <!-- EKRAN: Lobi -->
-  <div id="screen-lobby" class="screen active">
-    <div class="lobby-content">
-      <div class="logo">
+  <!-- EKRAN: Giriş / Kayıt -->
+  <div id="screen-auth" class="screen active">
+    <div class="auth-card">
+      <div class="logo auth-logo">
         <span class="logo-verbum">VERBUM</span><span class="logo-9">9</span>
       </div>
-      <p class="logo-sub">Türkçe Kelime Yarışı</p>
-      <button id="btn-play" class="btn-primary">Oyna</button>
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active">Giriş</button>
+        <button id="tab-register" class="auth-tab">Kayıt Ol</button>
+      </div>
+      <div id="auth-error" class="auth-error"></div>
+
+      <form id="form-login" class="auth-form" autocomplete="on">
+        <div class="form-group">
+          <label for="login-username">Kullanıcı Adı</label>
+          <input id="login-username" type="text" autocomplete="username" placeholder="kullanıcı adın">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Şifre</label>
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••">
+        </div>
+        <button type="submit" id="btn-login" class="btn-primary auth-submit">Giriş Yap</button>
+      </form>
+
+      <form id="form-register" class="auth-form" hidden autocomplete="off">
+        <div class="form-group">
+          <label for="reg-username">Kullanıcı Adı</label>
+          <input id="reg-username" type="text" autocomplete="username" placeholder="en az 3 karakter">
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Şifre</label>
+          <input id="reg-password" type="password" autocomplete="new-password" placeholder="en az 6 karakter">
+        </div>
+        <button type="submit" id="btn-register" class="btn-primary auth-submit">Kayıt Ol</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- EKRAN: Ana Lobi -->
+  <div id="screen-lobby" class="screen">
+    <div class="lobby-header">
+      <div class="lobby-logo">VERBUM<span class="lobby-logo-9">9</span></div>
+      <div class="lobby-header-right">
+        <button class="lobby-user" id="btn-profile" aria-label="Profil">
+          <div class="avatar-small" id="lobby-avatar">?</div>
+          <div class="lobby-user-info">
+            <span id="lobby-username">Oyuncu</span>
+            <span id="lobby-level" class="level-badge">Sv. 1</span>
+          </div>
+        </button>
+        <button id="btn-settings-lobby" class="btn-settings-icon" aria-label="Ayarlar" title="Ayarlar">⚙</button>
+      </div>
+    </div>
+    <div class="lobby-main">
+      <div class="lobby-stats-bar">
+        <div class="lobby-stat-chip">
+          <span class="chip-val" id="lobby-stat-level">1</span>
+          <span class="chip-lbl">Seviye</span>
+        </div>
+        <div class="lobby-stat-chip">
+          <span class="chip-val" id="lobby-stat-score">0</span>
+          <span class="chip-lbl">Puan</span>
+        </div>
+        <div class="lobby-stat-chip">
+          <span class="chip-val" id="lobby-stat-kl">0</span>
+          <span class="chip-lbl">KL</span>
+        </div>
+      </div>
+      <p class="lobby-tagline">Türkçe Kelime Yarışı</p>
+      <div class="mode-grid">
+        <div class="mode-card" id="mode-solo">
+          <div class="mode-icon">🎮</div>
+          <div class="mode-title">Tek Oyunculu</div>
+          <div class="mode-desc">Harfleri seç, kelimeleri bul</div>
+        </div>
+        <div class="mode-card" id="mode-1v1">
+          <div class="mode-icon">⚡</div>
+          <div class="mode-title">1v1 Online</div>
+          <div class="mode-desc">Rakiple gerçek zamanlı yar</div>
+        </div>
+        <div class="mode-card locked" id="mode-daily">
+          <div class="mode-icon">📅</div>
+          <div class="mode-title">Günlük Oyun</div>
+          <div class="mode-badge">Yakında</div>
+        </div>
+        <div class="mode-card locked" id="mode-class">
+          <div class="mode-icon">🏫</div>
+          <div class="mode-title">Çoklu Mod</div>
+          <div class="mode-badge">Yakında</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EKRAN: Eşleşme Bekleme -->
+  <div id="screen-waiting" class="screen">
+    <div class="waiting-content">
+      <div class="waiting-spinner"></div>
+      <p id="waiting-status" class="waiting-status">Rakip aranıyor...</p>
+      <button id="btn-cancel-queue" class="btn-secondary">Vazgeç</button>
     </div>
   </div>
 
   <!-- EKRAN: Matris Doldurma -->
   <div id="screen-fill" class="screen">
-    <div class="fill-header">
-      <h2>Harfleri Seç</h2>
-      <p class="fill-hint">Klavyeyle yaz veya hücreye tıkla.</p>
+    <div class="screen-nav">
+      <button id="btn-exit-fill" class="btn-nav-home">Ana Sayfa</button>
+      <div class="nav-user-group">
+        <div id="fill-nav-avatar" class="nav-avatar-tiny">?</div>
+        <button id="btn-settings-fill" class="btn-settings-icon" title="Ayarlar">⚙</button>
+      </div>
     </div>
-    <div id="fill-matrix" class="matrix-grid fill-mode">
-      <!-- 9 hücre JS tarafından doldurulur -->
+    <div class="fill-body">
+      <div id="fill-turn-banner" class="fill-turn-banner" hidden></div>
+      <div class="fill-header">
+        <h2>Harfleri Seç</h2>
+        <p id="fill-hint" class="fill-hint">Klavyeyle yaz veya hücreye tıkla.</p>
+      </div>
+      <div id="fill-matrix" class="matrix-grid fill-mode">
+        <!-- 9 hücre JS tarafından doldurulur -->
+      </div>
+      <div class="fill-actions">
+        <button id="btn-random-one" class="btn-secondary">🎲 Bu Hücreyi</button>
+        <button id="btn-random-all" class="btn-secondary">🎲 Tümünü</button>
+        <button id="btn-fill-keyboard" class="btn-secondary btn-keyboard">⌨</button>
+        <button id="btn-start-game" class="btn-primary" disabled>Başla →</button>
+      </div>
     </div>
-    <div class="fill-actions">
-      <button id="btn-random-all" class="btn-secondary">🎲 Tümünü Rastgele</button>
-      <button id="btn-start-game" class="btn-primary" disabled>Başla →</button>
-    </div>
+    <input id="fill-keyboard-input" type="text" inputmode="text"
+      autocomplete="off" autocorrect="off" autocapitalize="characters"
+      aria-hidden="true" tabindex="-1">
   </div>
 
   <!-- EKRAN: Oyun -->
   <div id="screen-game" class="screen">
-    <!-- Geri sayım overlay — matrisin üstüne biner, arka planda matris görünür -->
+    <!-- Geri sayım overlay -->
     <div id="countdown-overlay" class="countdown-overlay" hidden>
       <div id="countdown-number" class="countdown-number">5</div>
       <p class="countdown-label">Hazır ol!</p>
     </div>
     <div class="game-header">
+      <button id="btn-exit-game" class="btn-nav-home">Ana Sayfa</button>
       <div id="game-score" class="game-stat">
         <span class="stat-label">PUAN</span>
         <span id="score-value" class="stat-value">0</span>
@@ -51,13 +159,15 @@
         <span class="stat-label">KELİME</span>
         <span id="words-count-value" class="stat-value">0</span>
       </div>
+      <div class="nav-user-group">
+        <div id="game-nav-avatar" class="nav-avatar-tiny">?</div>
+        <button id="btn-settings-game" class="btn-settings-icon" title="Ayarlar">⚙</button>
+      </div>
     </div>
 
     <div class="game-body">
       <div class="game-area">
-        <div id="game-matrix" class="matrix-grid game-mode">
-          <!-- Hücreler JS tarafından oluşturulur -->
-        </div>
+        <div id="game-matrix" class="matrix-grid game-mode"></div>
 
         <div class="word-compose-area">
           <div id="word-display" class="word-display">
@@ -67,8 +177,14 @@
           <div class="word-actions">
             <button id="btn-backspace" class="btn-action" title="Son harfi sil">⌫</button>
             <button id="btn-clear" class="btn-action btn-clear" title="Temizle">✕</button>
+            <button id="btn-hint" class="btn-action btn-hint" title="İpucu">💡</button>
+            <button id="btn-extend-time" class="btn-action btn-extend" title="30 saniye uzat" hidden>+30</button>
+            <button id="btn-keyboard" class="btn-action btn-keyboard" title="Klavyeyi aç">⌨</button>
             <button id="btn-submit" class="btn-action btn-submit" disabled title="Gönder (Enter)">✓</button>
           </div>
+          <input id="game-keyboard-input" type="text" inputmode="text"
+            autocomplete="off" autocorrect="off" autocapitalize="characters"
+            aria-hidden="true" tabindex="-1">
         </div>
 
         <button id="btn-toggle-words" class="btn-toggle-words">📝 Kelimelerim</button>
@@ -92,9 +208,24 @@
         <div class="result-score-number" id="result-score-number">0</div>
         <div class="result-score-label">puan</div>
       </div>
-      <div class="result-words-section">
+      <div class="result-words-section" id="result-words-section">
         <h3>Bulduğun Kelimeler</h3>
         <ul id="result-words-list" class="words-list result-mode"></ul>
+      </div>
+
+      <!-- Çok oyunculu sonuç (solo modda gizli) -->
+      <div id="multi-result" hidden>
+        <div id="multi-result-header" class="multi-result-header"></div>
+        <div class="multi-columns">
+          <div class="multi-col">
+            <h4 id="multi-my-name" class="multi-col-title">Sen</h4>
+            <ul id="multi-my-words" class="words-list result-mode"></ul>
+          </div>
+          <div class="multi-col">
+            <h4 id="multi-op-name" class="multi-col-title">Rakip</h4>
+            <ul id="multi-op-words" class="words-list result-mode"></ul>
+          </div>
+        </div>
       </div>
 
       <div class="result-words-section" id="result-missed-section" hidden>
@@ -106,12 +237,118 @@
       </div>
 
       <div class="result-actions">
-        <button id="btn-show-missed" class="btn-secondary">Diğer Kelimeler →</button>
         <button id="btn-again" class="btn-primary">Tekrar Oyna</button>
+        <button id="btn-to-lobby" class="btn-secondary">Ana Menü</button>
       </div>
     </div>
   </div>
 
-  <script type="module" src="js/main.js"></script>
+  <!-- Profil Pop-up (ekran değil, katman) -->
+  <div id="profile-popup" class="profile-popup" hidden>
+    <div class="profile-backdrop" id="profile-backdrop"></div>
+    <div class="profile-content">
+      <button id="btn-close-profile" class="profile-close">✕</button>
+      <div class="profile-avatar" id="profile-avatar-big">?</div>
+      <div id="profile-username-display" class="profile-username">Oyuncu</div>
+      <div class="profile-stats">
+        <div class="profile-stat profile-stat-level">
+          <div class="profile-stat-value" id="profile-level-value">1</div>
+          <div class="profile-stat-label">Seviye</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value" id="profile-score">0</div>
+          <div class="profile-stat-label">Toplam Puan</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value" id="profile-kl">0</div>
+          <div class="profile-stat-label">KL Bakiyesi</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value" id="profile-games">0</div>
+          <div class="profile-stat-label">Oyun</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value" id="profile-wins">0</div>
+          <div class="profile-stat-label">Kazanılan</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value" id="profile-losses">0</div>
+          <div class="profile-stat-label">Kaybedilen</div>
+        </div>
+      </div>
+      <button id="btn-logout" class="btn-logout">Çıkış Yap</button>
+    </div>
+  </div>
+
+  <!-- Sesli Harf Uyarı Popup -->
+  <div id="vowel-popup" class="exit-confirm" hidden>
+    <div class="exit-confirm-backdrop"></div>
+    <div class="exit-confirm-content">
+      <p class="exit-confirm-text" id="vowel-popup-text">Sesli harf eklendi.</p>
+      <div class="exit-confirm-actions">
+        <button id="btn-vowel-ok" class="btn-primary">Tamam</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Süre Uzatma Onay Popup (çok oyunculu) -->
+  <div id="extension-popup" class="exit-confirm" hidden>
+    <div class="exit-confirm-backdrop"></div>
+    <div class="exit-confirm-content">
+      <p class="exit-confirm-text" id="extension-popup-text">Rakibiniz oyunu 30 saniye uzatmak istiyor.</p>
+      <div class="exit-confirm-actions">
+        <button id="btn-extension-yes" class="btn-primary">Kabul Et</button>
+        <button id="btn-extension-no" class="btn-secondary">Reddet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Çıkış Onay Overlay -->
+  <div id="exit-confirm" class="exit-confirm" hidden>
+    <div class="exit-confirm-backdrop" id="exit-confirm-backdrop"></div>
+    <div class="exit-confirm-content">
+      <p class="exit-confirm-text">Çıkmak istediğinizden emin misiniz?</p>
+      <div class="exit-confirm-actions">
+        <button id="btn-exit-yes" class="btn-secondary">Çık</button>
+        <button id="btn-exit-no" class="btn-primary">Devam Et</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ayarlar Popup -->
+  <div id="settings-popup" class="settings-popup" hidden>
+    <div class="settings-backdrop" id="settings-backdrop"></div>
+    <div class="settings-content">
+      <button id="btn-close-settings" class="settings-close">✕</button>
+      <h3 class="settings-title">Ayarlar</h3>
+      <div class="settings-row">
+        <span class="settings-label">Tema</span>
+        <div class="toggle-group">
+          <button id="btn-theme-dark" class="toggle-btn active" data-theme="dark">Koyu</button>
+          <button id="btn-theme-light" class="toggle-btn" data-theme="light">Açık</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Uyarı Sesi</span>
+        <label class="switch">
+          <input type="checkbox" id="setting-sound" checked>
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+      <div class="settings-row" id="settings-duration-row">
+        <span class="settings-label">Oyun Süresi</span>
+        <div class="toggle-group">
+          <button class="toggle-btn duration-btn" data-dur="120">2 dk</button>
+          <button class="toggle-btn duration-btn active" data-dur="180">3 dk</button>
+          <button class="toggle-btn duration-btn" data-dur="300">5 dk</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-version" class="app-version">v0.5</div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="js/main.js?v=0.5"></script>
 </body>
 </html>
