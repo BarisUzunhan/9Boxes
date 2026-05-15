@@ -1,3 +1,4 @@
+require('dotenv').config();
 const http = require('http');
 const express = require('express');
 const path = require('path');
@@ -7,6 +8,7 @@ const os = require('os');
 const bcrypt = require('bcryptjs');
 const { Server } = require('socket.io');
 const userService = require('./userService');
+const supabase = require('./supabase');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,9 +18,8 @@ const io = new Server(server, {
   pingInterval: 25000,  // 25s'de bir ping
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const WORDS_PATH = path.join(__dirname, '../data/words.json');
-const DISPUTES_PATH = path.join(__dirname, '../data/disputes.json');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../client')));
@@ -32,12 +33,6 @@ function readWords() {
 }
 function writeWords(data) {
   fs.writeFileSync(WORDS_PATH, JSON.stringify(data), 'utf8');
-}
-function readDisputes() {
-  return JSON.parse(fs.readFileSync(DISPUTES_PATH, 'utf8'));
-}
-function writeDisputes(data) {
-  fs.writeFileSync(DISPUTES_PATH, JSON.stringify(data, null, 2), 'utf8');
 }
 function extractToken(req) {
   return (req.headers['authorization'] || '').replace('Bearer ', '').trim() || null;
@@ -299,48 +294,44 @@ app.delete('/api/admin/homophones/:word', (req, res) => {
 
 // ─── İtiraz API: listele ──────────────────────────────────────
 
-app.get('/api/disputes', (req, res) => {
-  res.json(readDisputes());
+app.get('/api/disputes', async (req, res) => {
+  const { data } = await supabase.from('disputes').select('*').order('created_at', { ascending: false });
+  res.json((data || []).map(d => ({
+    id: d.id, word: d.word, status: d.status,
+    createdAt: d.created_at, resolvedAt: d.resolved_at,
+  })));
 });
 
 // ─── İtiraz API: yeni itiraz ──────────────────────────────────
 
-app.post('/api/disputes', (req, res) => {
+app.post('/api/disputes', async (req, res) => {
   const { word } = req.body;
   if (!word || typeof word !== 'string') return res.json({ ok: false, error: 'Geçersiz kelime.' });
   const normalized = word.trim().toLocaleLowerCase('tr-TR');
   if (!normalized) return res.json({ ok: false, error: 'Boş kelime.' });
 
-  const disputes = readDisputes();
-  const alreadyPending = disputes.find(d => d.word === normalized && d.status === 'pending');
-  if (alreadyPending) return res.json({ ok: false, error: 'Bu kelime zaten itirazda.' });
+  const { data: existing } = await supabase
+    .from('disputes').select('id').eq('word', normalized).eq('status', 'pending').maybeSingle();
+  if (existing) return res.json({ ok: false, error: 'Bu kelime zaten itirazda.' });
 
-  const dispute = {
-    id: Date.now(),
-    word: normalized,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-    resolvedAt: null,
-  };
-  disputes.push(dispute);
-  writeDisputes(disputes);
-  res.json({ ok: true, id: dispute.id });
+  const id = Date.now();
+  const { error } = await supabase.from('disputes').insert({ id, word: normalized, status: 'pending' });
+  if (error) return res.json({ ok: false, error: 'Kayıt hatası.' });
+  res.json({ ok: true, id });
 });
 
 // ─── İtiraz API: onayla / reddet ─────────────────────────────
 
-app.patch('/api/disputes/:id', (req, res) => {
+app.patch('/api/disputes/:id', async (req, res) => {
   const id = parseInt(req.params.id);
   const { action } = req.body;
   if (!['approve', 'reject'].includes(action)) return res.json({ ok: false, error: 'Geçersiz işlem.' });
 
-  const disputes = readDisputes();
-  const dispute = disputes.find(d => d.id === id);
+  const { data: dispute } = await supabase.from('disputes').select('*').eq('id', id).maybeSingle();
   if (!dispute) return res.json({ ok: false, error: 'İtiraz bulunamadı.' });
 
-  dispute.status = action === 'approve' ? 'approved' : 'rejected';
-  dispute.resolvedAt = new Date().toISOString();
-  writeDisputes(disputes);
+  const status = action === 'approve' ? 'approved' : 'rejected';
+  await supabase.from('disputes').update({ status, resolved_at: new Date().toISOString() }).eq('id', id);
 
   if (action === 'approve') {
     const data = readWords();
@@ -348,7 +339,6 @@ app.patch('/api/disputes/:id', (req, res) => {
       data.words.push(dispute.word);
       writeWords(data);
     }
-    // Sunucu yeniden başlatılmadan aktif oyunlarda da geçerli olsun
     _wordSet.add(dispute.word);
   }
 
