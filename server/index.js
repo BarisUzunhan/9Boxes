@@ -445,8 +445,8 @@ function createRoom(p1, p2) {
     timerInterval: null,
     countdownInterval: null,
     vowelFixDelay: null,
-    duration: 180,
-    timeLeft: 180,
+    duration: 120,
+    timeLeft: 120,
     extensionRequests: [0, 0],
     pendingExtension: null,
   };

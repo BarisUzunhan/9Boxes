@@ -85,7 +85,7 @@ async function fetchMe() {
 // ─── Ayarlar durumu ──────────────────────────────────────────
 
 let _soundEnabled = true;
-let _gameDuration = 180;
+let _gameDuration = 120;
 
 function loadSettings() {
   const theme = localStorage.getItem('verbum9_theme') || 'dark';
@@ -98,8 +98,8 @@ function loadSettings() {
   setSoundEnabled(_soundEnabled);
   document.getElementById('setting-sound').checked = _soundEnabled;
 
-  const dur = parseInt(localStorage.getItem('verbum9_duration') || '180');
-  _gameDuration = [120, 180, 300].includes(dur) ? dur : 180;
+  const dur = 120;
+  _gameDuration = 120;
   setGameDuration(_gameDuration);
   document.querySelectorAll('.duration-btn').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.dur) === _gameDuration);
@@ -253,22 +253,9 @@ function bindSettingsEvents() {
     localStorage.setItem('verbum9_sound', _soundEnabled ? '1' : '0');
   });
 
-  // Süre
+  // Süre — sabit 2 dakika, butonlar pasif
   document.querySelectorAll('.duration-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const dur = parseInt(btn.dataset.dur);
-      if (mode === 'multi' && state.phase === PHASES.FILL && mp.playerIndex === 0) {
-        socket.emit('set_duration', { duration: dur });
-        // duration_changed olayı gelince butonlar güncellenir
-      } else {
-        _gameDuration = dur;
-        setGameDuration(dur);
-        localStorage.setItem('verbum9_duration', dur);
-        document.querySelectorAll('.duration-btn').forEach(b => {
-          b.classList.toggle('active', parseInt(b.dataset.dur) === dur);
-        });
-      }
-    });
+    btn.disabled = true;
   });
 }
 
