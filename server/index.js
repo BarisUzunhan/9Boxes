@@ -519,12 +519,15 @@ async function roomEnd(room) {
   w0.forEach(w => { if (!s1.has(w.word.toLocaleLowerCase('tr-TR'))) score0 += w.word.length; });
   w1.forEach(w => { if (!s0.has(w.word.toLocaleLowerCase('tr-TR'))) score1 += w.word.length; });
 
-  // Kullanıcı istatistiklerini kaydet (beraberlikte ikisi de kazanmamış sayılır)
   const winner = score0 > score1 ? 0 : score1 > score0 ? 1 : -1;
-  await Promise.all([
-    userService.recordGameResult(room.tokens[0], { scoreDelta: score0, won: winner === 0 }),
-    userService.recordGameResult(room.tokens[1], { scoreDelta: score1, won: winner === 1 }),
-  ]);
+  try {
+    await Promise.all([
+      userService.recordGameResult(room.tokens[0], { scoreDelta: score0, won: winner === 0 }),
+      userService.recordGameResult(room.tokens[1], { scoreDelta: score1, won: winner === 1 }),
+    ]);
+  } catch (err) {
+    console.error('[roomEnd] istatistik kaydedilemedi:', err);
+  }
 
   const gameResult = {
     players: [
