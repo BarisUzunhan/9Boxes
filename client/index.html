@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Verbum9</title>
-  <link rel="stylesheet" href="css/style.css?v=0.5">
+  <link rel="stylesheet" href="css/style.css?v=0.6">
 </head>
 <body>
 
@@ -26,7 +26,10 @@
           <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••">
         </div>
         <button type="submit" id="btn-login" class="btn-primary auth-submit">Giriş Yap</button>
-        <p class="auth-switch">Hesabın yok mu? <button type="button" id="btn-to-register" class="auth-switch-btn">Kayıt Ol</button></p>
+        <div class="auth-switch-row">
+          <button type="button" id="btn-to-forgot" class="auth-switch-btn">Şifremi Unuttum?</button>
+          <button type="button" id="btn-to-register" class="auth-switch-btn">Kayıt Ol →</button>
+        </div>
       </form>
 
       <form id="form-register" class="auth-form" hidden autocomplete="off">
@@ -45,6 +48,19 @@
         <button type="submit" id="btn-register" class="btn-primary auth-submit">Kayıt Ol</button>
         <p class="auth-switch">Zaten hesabın var mı? <button type="button" id="btn-to-login" class="auth-switch-btn">Giriş Yap</button></p>
       </form>
+
+      <div id="auth-forgot" class="auth-pending" hidden>
+        <p class="auth-pending-title">Şifre Sıfırla</p>
+        <p class="auth-pending-desc" id="auth-forgot-desc">Kayıtlı e-posta adresini gir, sana sıfırlama bağlantısı gönderelim.</p>
+        <form id="form-forgot" class="auth-form">
+          <div class="form-group">
+            <label for="forgot-email">E-posta</label>
+            <input id="forgot-email" type="email" autocomplete="email" placeholder="ornek@mail.com">
+          </div>
+          <button type="submit" id="btn-forgot-submit" class="btn-primary auth-submit">Gönder</button>
+        </form>
+        <button type="button" id="btn-forgot-to-login" class="auth-switch-btn">← Girişe Dön</button>
+      </div>
 
       <div id="auth-pending" class="auth-pending" hidden>
         <div class="auth-pending-icon">✉️</div>
@@ -375,9 +391,9 @@
     </div>
   </div>
 
-  <div id="app-version" class="app-version">v0.5</div>
+  <div id="app-version" class="app-version">v0.6</div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="js/main.js?v=0.5"></script>
+  <script type="module" src="js/main.js?v=0.6"></script>
 </body>
 </html>

@@ -355,6 +355,7 @@ let _pendingUsername = '';
 function showAuthPending(email) {
   document.getElementById('form-login').hidden = true;
   document.getElementById('form-register').hidden = true;
+  document.getElementById('auth-forgot').hidden = true;
   document.getElementById('auth-pending').hidden = false;
   const emailEl = document.getElementById('auth-pending-email');
   if (email) {
@@ -366,8 +367,22 @@ function showAuthPending(email) {
   setAuthError('');
 }
 
+function showAuthForgot() {
+  document.getElementById('form-login').hidden = true;
+  document.getElementById('form-register').hidden = true;
+  document.getElementById('auth-pending').hidden = true;
+  document.getElementById('auth-forgot').hidden = false;
+  // Formu sıfırla (daha önce gönderilmiş olabilir)
+  document.getElementById('form-forgot').hidden = false;
+  document.getElementById('forgot-email').value = '';
+  document.getElementById('auth-forgot-desc').textContent =
+    'Kayıtlı e-posta adresini gir, sana sıfırlama bağlantısı gönderelim.';
+  setAuthError('');
+}
+
 function showAuthLogin() {
   document.getElementById('auth-pending').hidden = true;
+  document.getElementById('auth-forgot').hidden = true;
   document.getElementById('form-register').hidden = true;
   document.getElementById('form-login').hidden = false;
   setAuthError('');
@@ -381,6 +396,33 @@ function bindAuth() {
   });
   document.getElementById('btn-to-login').addEventListener('click', showAuthLogin);
   document.getElementById('btn-pending-to-login').addEventListener('click', showAuthLogin);
+  document.getElementById('btn-to-forgot').addEventListener('click', showAuthForgot);
+  document.getElementById('btn-forgot-to-login').addEventListener('click', showAuthLogin);
+
+  document.getElementById('form-forgot').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = document.getElementById('forgot-email').value.trim();
+    if (!email) return;
+    setAuthError('');
+    const btn = document.getElementById('btn-forgot-submit');
+    btn.disabled = true;
+    btn.textContent = 'Gönderiliyor...';
+    try {
+      const data = await apiFetch('POST', '/api/auth/forgot-password', { email });
+      if (data.ok) {
+        document.getElementById('form-forgot').style.display = 'none';
+        document.getElementById('auth-forgot-desc').textContent =
+          'Kayıtlı bir hesap varsa sıfırlama bağlantısı gönderildi. Spam klasörünü de kontrol et.';
+      } else {
+        setAuthError(data.error || 'Bir hata oluştu.');
+      }
+    } catch {
+      setAuthError('Bağlantı hatası. Lütfen tekrar dene.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Gönder';
+    }
+  });
 
   document.getElementById('btn-resend').addEventListener('click', async () => {
     const btn = document.getElementById('btn-resend');
@@ -406,7 +448,13 @@ function bindAuth() {
       currentUser = data.user;
       renderLobby();
       showScreen('screen-lobby');
-      startLobby();
+      const isNewUser = localStorage.getItem('verbum9_new_user');
+      if (isNewUser) {
+        localStorage.removeItem('verbum9_new_user');
+        showLobbyTutorial();
+      } else {
+        startLobby();
+      }
     } else if (data.code === 'email_not_verified') {
       _pendingUsername = data.username || username;
       showAuthPending(null);
@@ -427,6 +475,7 @@ function bindAuth() {
     btn.disabled = false;
     if (data.ok && data.pending) {
       _pendingUsername = username;
+      localStorage.setItem('verbum9_new_user', '1');
       showAuthPending(email);
     } else if (!data.ok) {
       setAuthError(data.error);

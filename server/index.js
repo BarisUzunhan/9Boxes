@@ -70,6 +70,124 @@ async function sendVerificationEmail(to, token) {
   });
 }
 
+async function sendPasswordResetEmail(to, token) {
+  const link = `${APP_URL}/reset-password?token=${token}`;
+  const body = JSON.stringify({
+    sender:      { name: 'Verbum9', email: process.env.BREVO_SENDER_EMAIL || to },
+    to:          [{ email: to }],
+    subject:     'Verbum9 — Şifre Sıfırlama',
+    htmlContent: `
+      <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px;background:#0f0e17;color:#fff;border-radius:16px">
+        <h1 style="margin:0 0 24px;letter-spacing:-1px">
+          <span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span>
+        </h1>
+        <p style="font-size:1rem;margin:0 0 8px">Merhaba!</p>
+        <p style="color:#8892b0;line-height:1.6;margin:0 0 24px">
+          Şifrenizi sıfırlamak için aşağıdaki butona basın. Link 1 saat geçerlidir.
+          Bu isteği siz yapmadıysanız bu e-postayı görmezden gelin.
+        </p>
+        <a href="${link}"
+           style="display:inline-block;padding:14px 28px;background:#e94560;color:#fff;
+                  border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem">
+          Şifremi Sıfırla →
+        </a>
+        <p style="color:#8892b0;font-size:0.8rem;margin-top:24px;word-break:break-all">
+          Buton çalışmıyorsa bu linki tarayıcına kopyala:<br>${link}
+        </p>
+      </div>
+    `,
+  });
+
+  await new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.brevo.com',
+      path:     '/v3/smtp/email',
+      method:   'POST',
+      headers:  {
+        'accept':         'application/json',
+        'api-key':        process.env.BREVO_API_KEY,
+        'content-type':   'application/json',
+        'content-length': Buffer.byteLength(body),
+      },
+    }, res => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve();
+        else reject(new Error(`Brevo ${res.statusCode}: ${data}`));
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+function resetPasswordPage(token) {
+  return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Verbum9 — Şifre Sıfırla</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui;min-height:100vh;display:flex;align-items:center;
+         justify-content:center;background:#0f0e17;color:#fff;padding:24px}
+    .card{background:#1a1a2e;border-radius:20px;padding:40px 32px;text-align:center;
+          max-width:420px;width:100%}
+    h1{font-size:2rem;letter-spacing:-1px;margin-bottom:8px}
+    p{color:#8892b0;line-height:1.6;margin-bottom:24px;font-size:.9rem}
+    .fg{text-align:left;margin-bottom:16px}
+    label{display:block;font-size:.75rem;color:#8892b0;text-transform:uppercase;
+          letter-spacing:1px;margin-bottom:6px}
+    input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.08);
+          background:#16213e;color:#fff;font-size:1rem;outline:none}
+    input:focus{border-color:#4cc9f0}
+    button{width:100%;padding:14px;border-radius:10px;border:none;
+           background:#e94560;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .msg{padding:10px;border-radius:8px;margin-top:12px;font-size:.9rem}
+    .msg.ok{background:rgba(6,214,160,.15);color:#06d6a0}
+    .msg.err{background:rgba(239,35,60,.15);color:#ef233c}
+    a{display:inline-block;margin-top:20px;color:#4cc9f0;font-size:.9rem;text-decoration:none}
+  </style>
+  </head><body>
+  <div class="card">
+    <h1><span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span></h1>
+    <p>Yeni şifreni gir.</p>
+    <form id="frm" onsubmit="doReset(event)">
+      <div class="fg"><label>Yeni Şifre</label>
+        <input type="password" id="pw" placeholder="en az 6 karakter" required></div>
+      <div class="fg"><label>Şifre Tekrar</label>
+        <input type="password" id="pw2" placeholder="şifreyi tekrar gir" required></div>
+      <button type="submit" id="btn">Şifremi Güncelle</button>
+      <div id="msg" class="msg" style="display:none"></div>
+    </form>
+    <a href="/">← Giriş Ekranına Dön</a>
+  </div>
+  <script>
+    async function doReset(e){
+      e.preventDefault();
+      const pw=document.getElementById('pw').value;
+      const pw2=document.getElementById('pw2').value;
+      const msg=document.getElementById('msg');
+      msg.style.display='none';
+      if(pw.length<6){msg.className='msg err';msg.textContent='Şifre en az 6 karakter olmalı.';msg.style.display='block';return;}
+      if(pw!==pw2){msg.className='msg err';msg.textContent='Şifreler eşleşmiyor.';msg.style.display='block';return;}
+      const btn=document.getElementById('btn');
+      btn.disabled=true;btn.textContent='Güncelleniyor...';
+      const res=await fetch('/api/auth/reset-password',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:'${token}',newPassword:pw})});
+      const data=await res.json();
+      btn.disabled=false;btn.textContent='Şifremi Güncelle';
+      msg.style.display='block';
+      if(data.ok){msg.className='msg ok';msg.textContent='Şifren güncellendi! Şimdi giriş yapabilirsin.';
+        document.getElementById('frm').hidden=true;}
+      else{msg.className='msg err';msg.textContent=data.error||'Hata oluştu.';}
+    }
+  </script>
+  </body></html>`;
+}
+
 function verifyPage(msg, success) {
   const color = success ? '#06d6a0' : '#ef233c';
   return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
@@ -516,6 +634,46 @@ app.post('/api/auth/resend-verification', async (req, res) => {
   } catch (err) {
     console.error('[resend-verification]', err);
     res.json({ ok: false, error: 'Mail gönderilemedi.' });
+  }
+});
+
+app.post('/api/auth/forgot-password', (req, res) => {
+  const { email } = req.body || {};
+  // Güvenlik: her durumda aynı yanıtı ver, e-posta varlığını açıklama
+  res.json({ ok: true });
+
+  if (!email) return;
+  const emailNorm = email.trim().toLowerCase();
+  // E-posta arama ve gönderimi arka planda yap (yanıt zaten gönderildi)
+  userService.getUserByEmail(emailNorm).then(async user => {
+    if (!user || !user.emailVerified) return;
+    const token = crypto.randomBytes(32).toString('hex');
+    await userService.setVerificationToken(user.id, token);
+    await sendPasswordResetEmail(emailNorm, token);
+  }).catch(err => console.error('[forgot-password]', err));
+});
+
+app.get('/reset-password', async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.redirect('/');
+  const user = await userService.getUserByVerificationToken(token);
+  if (!user) return res.send(verifyPage('Bu link geçersiz veya zaten kullanılmış.', false));
+  res.send(resetPasswordPage(token));
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body || {};
+    if (!token || !newPassword) return res.json({ ok: false, error: 'Gerekli alanlar eksik.' });
+    if (newPassword.length < 6) return res.json({ ok: false, error: 'Şifre en az 6 karakter olmalı.' });
+    const user = await userService.getUserByVerificationToken(token);
+    if (!user) return res.json({ ok: false, error: 'Geçersiz veya süresi dolmuş link.' });
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await userService.resetPassword(token, newHash);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[reset-password]', err);
+    res.json({ ok: false, error: 'Sunucu hatası.' });
   }
 });
 

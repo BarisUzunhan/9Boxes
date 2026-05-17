@@ -124,6 +124,27 @@ async function getUserByUsername(username) {
   return fromDB(data);
 }
 
+async function getUserByEmail(email) {
+  if (!email) return null;
+  const emailNorm = email.trim().toLowerCase();
+  const { data } = await supabase.from('users').select('*');
+  if (!data) return null;
+  for (const row of data) {
+    const decrypted = decryptEmail(row.email);
+    if (decrypted && decrypted.toLowerCase() === emailNorm) return fromDB(row);
+  }
+  return null;
+}
+
+async function resetPassword(token, newPasswordHash) {
+  const { data } = await supabase
+    .from('users')
+    .update({ password_hash: newPasswordHash, verification_token: null })
+    .eq('verification_token', token)
+    .select().single();
+  return fromDB(data);
+}
+
 // ─── Yazma ───────────────────────────────────────────────────────
 
 async function createUser(userData) {
@@ -176,11 +197,13 @@ module.exports = {
   safeUser,
   getUserByToken,
   getUserByUsername,
+  getUserByEmail,
   getUserByVerificationToken,
   createUser,
   updateUserToken,
   verifyEmail,
   setVerificationToken,
+  resetPassword,
   deductKL,
   recordGameResult,
 };
