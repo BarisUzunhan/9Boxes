@@ -351,8 +351,16 @@ async function init() {
 // ─── Giriş / Kayıt ───────────────────────────────────────────
 
 function bindAuth() {
-  document.getElementById('tab-login').addEventListener('click', () => switchAuthTab('login'));
-  document.getElementById('tab-register').addEventListener('click', () => switchAuthTab('register'));
+  document.getElementById('btn-to-register').addEventListener('click', () => {
+    document.getElementById('form-login').hidden = true;
+    document.getElementById('form-register').hidden = false;
+    setAuthError('');
+  });
+  document.getElementById('btn-to-login').addEventListener('click', () => {
+    document.getElementById('form-register').hidden = true;
+    document.getElementById('form-login').hidden = false;
+    setAuthError('');
+  });
 
   document.getElementById('form-login').addEventListener('submit', async e => {
     e.preventDefault();
@@ -377,11 +385,12 @@ function bindAuth() {
   document.getElementById('form-register').addEventListener('submit', async e => {
     e.preventDefault();
     const username = document.getElementById('reg-username').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
     setAuthError('');
     const btn = document.getElementById('btn-register');
     btn.disabled = true;
-    const data = await apiFetch('POST', '/api/auth/register', { username, password });
+    const data = await apiFetch('POST', '/api/auth/register', { username, email, password });
     btn.disabled = false;
     if (data.ok) {
       localStorage.setItem(TOKEN_KEY, data.token);
@@ -393,15 +402,6 @@ function bindAuth() {
       setAuthError(data.error);
     }
   });
-}
-
-function switchAuthTab(tab) {
-  const isLogin = tab === 'login';
-  document.getElementById('tab-login').classList.toggle('active', isLogin);
-  document.getElementById('tab-register').classList.toggle('active', !isLogin);
-  document.getElementById('form-login').hidden = !isLogin;
-  document.getElementById('form-register').hidden = isLogin;
-  setAuthError('');
 }
 
 function setAuthError(msg) {

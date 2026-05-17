@@ -354,8 +354,9 @@ app.patch('/api/disputes/:id', async (req, res) => {
 
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { username, password } = req.body || {};
+    const { username, email, password } = req.body || {};
     if (!username || !password) return res.json({ ok: false, error: 'Kullanıcı adı ve şifre gerekli.' });
+    if (!email || !email.includes('@') || !email.includes('.')) return res.json({ ok: false, error: 'Geçerli bir e-posta adresi gir.' });
     if (username.trim().length < 3) return res.json({ ok: false, error: 'Kullanıcı adı en az 3 karakter olmalı.' });
     if (password.length < 6) return res.json({ ok: false, error: 'Şifre en az 6 karakter olmalı.' });
 
@@ -366,6 +367,7 @@ app.post('/api/auth/register', async (req, res) => {
     const user = {
       id: Date.now(),
       username: username.trim(),
+      email: email.trim().toLowerCase(),
       passwordHash: await bcrypt.hash(password, 10),
       token,
       totalScore: 0,

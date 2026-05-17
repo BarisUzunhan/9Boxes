@@ -1,4 +1,34 @@
-const supabase = require('./supabase');
+const crypto   = require('crypto');
+const supabase  = require('./supabase');
+
+// ─── E-posta şifrelemesi (AES-256-GCM) ───────────────────────────
+
+const EMAIL_ALGO = 'aes-256-gcm';
+
+function encryptEmail(email) {
+  const hex = process.env.EMAIL_ENCRYPTION_KEY;
+  if (!hex || !email) return email || null;
+  const key = Buffer.from(hex, 'hex');
+  const iv  = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv(EMAIL_ALGO, key, iv);
+  const enc = Buffer.concat([cipher.update(email, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString('hex')}:${tag.toString('hex')}:${enc.toString('hex')}`;
+}
+
+function decryptEmail(stored) {
+  const hex = process.env.EMAIL_ENCRYPTION_KEY;
+  if (!hex || !stored || !stored.includes(':')) return null;
+  try {
+    const key = Buffer.from(hex, 'hex');
+    const [ivHex, tagHex, dataHex] = stored.split(':');
+    const decipher = crypto.createDecipheriv(EMAIL_ALGO, key, Buffer.from(ivHex, 'hex'));
+    decipher.setAuthTag(Buffer.from(tagHex, 'hex'));
+    return Buffer.concat([decipher.update(Buffer.from(dataHex, 'hex')), decipher.final()]).toString('utf8');
+  } catch {
+    return null;
+  }
+}
 
 // ─── Seviye hesabı ────────────────────────────────────────────────
 
@@ -17,6 +47,7 @@ function fromDB(u) {
     username:     u.username,
     passwordHash: u.password_hash,
     token:        u.token,
+    email:        decryptEmail(u.email),
     totalScore:   u.total_score,
     level:        u.level,
     klBalance:    u.kl_balance,
@@ -32,6 +63,7 @@ function toDB(u) {
     username:      u.username,
     password_hash: u.passwordHash,
     token:         u.token,
+    email:         encryptEmail(u.email),
     total_score:   u.totalScore   || 0,
     level:         u.level        || 1,
     kl_balance:    u.klBalance    || 0,
@@ -45,7 +77,7 @@ function toDB(u) {
 
 function safeUser(u) {
   if (!u) return null;
-  const { passwordHash, token, ...rest } = u;
+  const { passwordHash, token, email, ...rest } = u;
   return rest;
 }
 

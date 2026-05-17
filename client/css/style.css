@@ -85,31 +85,23 @@ html, body {
   line-height: 1;
 }
 
-.auth-tabs {
-  display: flex;
-  background: var(--surface2);
-  border-radius: 10px;
-  padding: 4px;
-  width: 100%;
-  gap: 4px;
-}
-
-.auth-tab {
-  flex: 1;
-  background: transparent;
-  border: none;
+.auth-switch {
+  text-align: center;
+  font-size: 0.88rem;
   color: var(--text-dim);
-  padding: 9px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: background 0.2s, color 0.2s;
+  margin-top: 4px;
 }
 
-.auth-tab.active {
-  background: var(--accent);
-  color: white;
+.auth-switch-btn {
+  background: none;
+  border: none;
+  color: var(--accent2);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .auth-error {
