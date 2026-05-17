@@ -17,8 +17,10 @@ function encryptEmail(email) {
 }
 
 function decryptEmail(stored) {
+  if (!stored) return null;
   const hex = process.env.EMAIL_ENCRYPTION_KEY;
-  if (!hex || !stored || !stored.includes(':')) return null;
+  // Şifreleme anahtarı yoksa veya değer düz metinse (eski kayıtlar) olduğu gibi döndür
+  if (!hex || !stored.includes(':')) return stored;
   try {
     const key = Buffer.from(hex, 'hex');
     const [ivHex, tagHex, dataHex] = stored.split(':');
