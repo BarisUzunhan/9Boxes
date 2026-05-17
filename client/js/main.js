@@ -1,4 +1,5 @@
 import { loadDictionary, getWordArray } from './dictionary.js';
+import { init as initTutorial, startLobby, startFill, startGame as startGameTutorial, startResult, showLobbyTutorial, onEnd as onTutorialEnd } from './tutorial.js';
 import {
   state, PHASES,
   getRandomLetter, setFillLetter,
@@ -257,6 +258,65 @@ function bindSettingsEvents() {
   document.querySelectorAll('.duration-btn').forEach(btn => {
     btn.disabled = true;
   });
+
+  // Tutorial
+  document.getElementById('btn-show-tutorial').addEventListener('click', () => {
+    closeSettings();
+    showLobbyTutorial();
+  });
+}
+
+// ─── Demo Oyunu ───────────────────────────────────────────────
+
+const DEMO_MATRIX = ['K', 'İ', 'T', 'A', 'P', 'L', 'İ', 'K', 'A'];
+let _isDemoMode = false;
+
+function startDemoGame() {
+  _isDemoMode = true;
+  mode = 'solo';
+
+  clearInterval(_localTimerInterval);
+  _soloGameEndTime = null;
+  _soloOnEnd = null;
+  _soloTickCb = null;
+
+  resetToFill();
+  state.matrix = [...DEMO_MATRIX];
+  state.phase = PHASES.PLAYING;
+  clearCurrentWord();
+
+  document.getElementById('multi-result').hidden = true;
+  document.getElementById('result-words-section').hidden = false;
+
+  renderGameMatrix(onTileClick);
+  updateWordDisplay();
+  updateTimer(120);
+  updateScore();
+  document.getElementById('words-list').innerHTML = '';
+  document.getElementById('score-value').textContent = '0';
+  document.getElementById('words-count-value').textContent = '0';
+  document.getElementById('btn-extend-time').hidden = true;
+  showCountdownOverlay(false);
+
+  showScreen('screen-game');
+  bindGameEvents();
+  requestWakeLock();
+  setTimeout(() => startGameTutorial(), 100);
+}
+
+function endDemoGame() {
+  if (!_isDemoMode) return;
+  _isDemoMode = false;
+
+  clearInterval(_localTimerInterval);
+  state.phase = PHASES.RESULT;
+  removeGameEvents();
+  releaseWakeLock();
+
+  const missed = findMissedWords();
+  renderResult(missed);
+  showScreen('screen-result');
+  setTimeout(() => startResult(), 100);
 }
 
 // ─── Başlatma ────────────────────────────────────────────────
@@ -273,12 +333,16 @@ async function init() {
   bindHintEvents();
   bindExitEvents();
   bindSettingsEvents();
+  initTutorial();
+  onTutorialEnd('lobby', startDemoGame);
+  onTutorialEnd('game', endDemoGame);
 
   const user = await fetchMe();
   if (user) {
     currentUser = user;
     renderLobby();
     showScreen('screen-lobby');
+    startLobby();
   } else {
     showScreen('screen-auth');
   }
@@ -304,6 +368,7 @@ function bindAuth() {
       currentUser = data.user;
       renderLobby();
       showScreen('screen-lobby');
+      startLobby();
     } else {
       setAuthError(data.error);
     }
@@ -323,6 +388,7 @@ function bindAuth() {
       currentUser = data.user;
       renderLobby();
       showScreen('screen-lobby');
+      showLobbyTutorial();
     } else {
       setAuthError(data.error);
     }
@@ -380,6 +446,7 @@ function goToFill() {
   renderFillMatrix(onFillCellClick);
   bindFillEvents();
   showScreen('screen-fill');
+  setTimeout(() => startFill(), 100);
 }
 
 // ─── 1v1 Online ──────────────────────────────────────────────
@@ -440,6 +507,7 @@ socket.on('matched', ({ opponentName, playerIndex, turnIndex }) => {
   document.getElementById('btn-settings-fill').hidden = mp.playerIndex !== 0;
   bindFillEventsMulti();
   showScreen('screen-fill');
+  setTimeout(() => startFill(), 100);
 });
 
 socket.on('cell_filled', ({ matrix, turnIndex }) => {
@@ -477,6 +545,7 @@ socket.on('game_start', () => {
   document.getElementById('btn-extend-time').hidden = false;
   bindGameEvents();
   requestWakeLock();
+  setTimeout(() => startGameTutorial(), 100);
 });
 
 // Sunucudan tick gelmezse (mobil arka plan) yerel sayaç devam ettirir
@@ -585,6 +654,7 @@ socket.on('game_over', async ({ players }) => {
 
   renderResultMulti(players, missed);
   showScreen('screen-result');
+  setTimeout(() => startResult(), 100);
   // Sunucu istatistikleri yazdıktan sonra profili güncelle
   const fresh = await fetchMe();
   if (fresh) { currentUser = fresh; renderLobby(); }
@@ -983,6 +1053,7 @@ function _startCountdown() {
       updateTimer(_gameDuration);
       bindGameEvents();
       requestWakeLock();
+      setTimeout(() => startGameTutorial(), 100);
 
       const _onSoloEnd = () => {
         _soloGameEndTime = null;
@@ -993,6 +1064,7 @@ function _startCountdown() {
         const missed = findMissedWords();
         renderResult(missed);
         showScreen('screen-result');
+        setTimeout(() => startResult(), 100);
       };
       const _tick = seconds => updateTimer(seconds);
       _soloOnEnd = _onSoloEnd;
