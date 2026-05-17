@@ -70,7 +70,7 @@ async function sendVerificationEmail(to, token) {
   });
 }
 
-async function sendPasswordResetEmail(to, token) {
+async function sendPasswordResetEmail(to, token, username) {
   const link = `${APP_URL}/reset-password?token=${token}`;
   const body = JSON.stringify({
     sender:      { name: 'Verbum9', email: process.env.BREVO_SENDER_EMAIL || to },
@@ -81,10 +81,12 @@ async function sendPasswordResetEmail(to, token) {
         <h1 style="margin:0 0 24px;letter-spacing:-1px">
           <span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span>
         </h1>
-        <p style="font-size:1rem;margin:0 0 8px">Merhaba!</p>
+        <p style="font-size:1rem;margin:0 0 8px">Merhaba <strong>${username}</strong>!</p>
         <p style="color:#8892b0;line-height:1.6;margin:0 0 24px">
-          Şifrenizi sıfırlamak için aşağıdaki butona basın. Link 1 saat geçerlidir.
-          Bu isteği siz yapmadıysanız bu e-postayı görmezden gelin.
+          <strong style="color:#fff">Verbum9</strong>'daki <strong style="color:#4cc9f0">${username}</strong>
+          hesabın için şifre sıfırlama isteği aldık.<br><br>
+          Aşağıdaki butona basarak yeni şifreni belirleyebilirsin. Link <strong style="color:#fff">1 saat</strong> geçerlidir.<br><br>
+          <span style="font-size:0.9rem">Bu isteği sen yapmadıysan bu e-postayı görmezden gelebilirsin, şifren değişmeyecek.</span>
         </p>
         <a href="${link}"
            style="display:inline-block;padding:14px 28px;background:#e94560;color:#fff;
@@ -649,7 +651,7 @@ app.post('/api/auth/forgot-password', (req, res) => {
     if (!user || !user.emailVerified) return;
     const token = crypto.randomBytes(32).toString('hex');
     await userService.setVerificationToken(user.id, token);
-    await sendPasswordResetEmail(emailNorm, token);
+    await sendPasswordResetEmail(emailNorm, token, user.username);
   }).catch(err => console.error('[forgot-password]', err));
 });
 
