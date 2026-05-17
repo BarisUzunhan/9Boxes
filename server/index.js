@@ -14,26 +14,17 @@ const bcrypt = require('bcryptjs');
 const { Server } = require('socket.io');
 const userService = require('./userService');
 const supabase    = require('./supabase');
-const nodemailer = require('nodemailer');
+const https = require('https');
 
 const APP_URL = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
 
-const _mailer = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  auth: {
-    user: process.env.BREVO_SMTP_USER,
-    pass: process.env.BREVO_SMTP_KEY,
-  },
-});
-
 async function sendVerificationEmail(to, token) {
   const link = `${APP_URL}/verify-email?token=${token}`;
-  await _mailer.sendMail({
-    from: process.env.EMAIL_FROM || 'Verbum9 <noreply@verbum9.com>',
-    to,
-    subject: 'Verbum9 — E-posta Adresini Doğrula',
-    html: `
+  const body = JSON.stringify({
+    sender:      { name: 'Verbum9', email: process.env.BREVO_SENDER_EMAIL || to },
+    to:          [{ email: to }],
+    subject:     'Verbum9 — E-posta Adresini Doğrula',
+    htmlContent: `
       <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px;background:#0f0e17;color:#fff;border-radius:16px">
         <h1 style="margin:0 0 24px;letter-spacing:-1px">
           <span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span>
@@ -52,6 +43,30 @@ async function sendVerificationEmail(to, token) {
         </p>
       </div>
     `,
+  });
+
+  await new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.brevo.com',
+      path:     '/v3/smtp/email',
+      method:   'POST',
+      headers:  {
+        'accept':       'application/json',
+        'api-key':      process.env.BREVO_API_KEY,
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(body),
+      },
+    }, res => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve();
+        else reject(new Error(`Brevo ${res.statusCode}: ${data}`));
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
   });
 }
 
