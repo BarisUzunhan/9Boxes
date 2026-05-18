@@ -52,7 +52,7 @@ async function sendVerificationEmail(to, token) {
       method:   'POST',
       headers:  {
         'accept':       'application/json',
-        'api-key':      process.env.BREVO_API_KEY,
+        'api-key':      (process.env.BREVO_API_KEY || '').trim(),
         'content-type': 'application/json',
         'content-length': String(Buffer.byteLength(body)),
       },
@@ -107,7 +107,7 @@ async function sendPasswordResetEmail(to, token, username) {
       method:   'POST',
       headers:  {
         'accept':         'application/json',
-        'api-key':        process.env.BREVO_API_KEY,
+        'api-key':        (process.env.BREVO_API_KEY || '').trim(),
         'content-type':   'application/json',
         'content-length': String(Buffer.byteLength(body)),
       },
