@@ -501,6 +501,11 @@ function renderLobby() {
   document.getElementById('lobby-avatar').textContent = initial;
   document.getElementById('lobby-username').textContent = currentUser.username;
   document.getElementById('lobby-level').textContent = `Sv. ${currentUser.level}`;
+  document.getElementById('lobby-email').textContent = currentUser.email || '';
+  const _rd = currentUser.createdAt ? new Date(currentUser.createdAt) : null;
+  document.getElementById('lobby-date').textContent = _rd
+    ? `Kayıt: ${_rd.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}`
+    : '';
   document.getElementById('lobby-stat-level').textContent = currentUser.level;
   document.getElementById('lobby-stat-score').textContent = currentUser.totalScore;
   document.getElementById('lobby-stat-kl').textContent = currentUser.klBalance;

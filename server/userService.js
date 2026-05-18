@@ -83,7 +83,7 @@ function toDB(u) {
 
 function safeUser(u) {
   if (!u) return null;
-  const { passwordHash, token, email, ...rest } = u;
+  const { passwordHash, token, verificationToken, ...rest } = u;
   return rest;
 }
 
