@@ -526,8 +526,9 @@ app.post('/api/disputes', async (req, res) => {
   if (!normalized) return res.json({ ok: false, error: 'Boş kelime.' });
 
   const { data: existing } = await supabase
-    .from('disputes').select('id').eq('word', normalized).eq('status', 'pending').maybeSingle();
-  if (existing) return res.json({ ok: false, error: 'Bu kelime zaten itirazda.' });
+    .from('disputes').select('id,status').eq('word', normalized).in('status', ['pending', 'rejected']).maybeSingle();
+  if (existing?.status === 'pending')  return res.json({ ok: false, error: 'Bu kelime zaten itirazda.' });
+  if (existing?.status === 'rejected') return res.json({ ok: false, error: 'Bu kelime daha önce incelendi ve reddedildi.' });
 
   const id = Date.now();
   const { error } = await supabase.from('disputes').insert({ id, word: normalized, status: 'pending' });
