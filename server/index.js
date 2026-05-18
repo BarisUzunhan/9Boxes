@@ -54,7 +54,7 @@ async function sendVerificationEmail(to, token) {
         'accept':       'application/json',
         'api-key':      process.env.BREVO_API_KEY,
         'content-type': 'application/json',
-        'content-length': Buffer.byteLength(body),
+        'content-length': String(Buffer.byteLength(body)),
       },
     }, res => {
       let data = '';
@@ -109,7 +109,7 @@ async function sendPasswordResetEmail(to, token, username) {
         'accept':         'application/json',
         'api-key':        process.env.BREVO_API_KEY,
         'content-type':   'application/json',
-        'content-length': Buffer.byteLength(body),
+        'content-length': String(Buffer.byteLength(body)),
       },
     }, res => {
       let data = '';
