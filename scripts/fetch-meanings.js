@@ -38,8 +38,8 @@ function fetchTDK(word) {
           const json = JSON.parse(data);
           if (!Array.isArray(json) || json.length === 0) return resolve([]);
           const meanings = json.flatMap(entry =>
-            (entry.anlam_icerik || []).map(a => {
-              const ozellik = (a.ozellik_icerik || []).map(o => o.tam_adi).filter(Boolean).join(', ');
+            (entry.anlamlarListe || []).map(a => {
+              const ozellik = (a.ozelliklerListe || []).map(o => o.tam_adi).filter(Boolean).join(', ');
               return ozellik ? `(${ozellik}) ${a.anlam}` : a.anlam;
             })
           ).filter(Boolean).slice(0, 5);
@@ -61,12 +61,14 @@ async function main() {
   const allWords = JSON.parse(fs.readFileSync(WORDS_PATH, 'utf8')).words;
   console.log(`Sözlükte toplam ${allWords.length} kelime.`);
 
-  // Zaten işlenenleri atla
+  // Anlamı dolu olanları atla, boş olanları tekrar çek
   const { data: existing } = await supabase
     .from('word_meanings')
-    .select('word');
-  const done = new Set((existing || []).map(r => r.word));
-  console.log(`Veritabanında mevcut: ${done.size}`);
+    .select('word,meanings');
+  const done = new Set(
+    (existing || []).filter(r => r.meanings && r.meanings.length > 0).map(r => r.word)
+  );
+  console.log(`Anlamı dolu: ${done.size}`);
 
   const toFetch = allWords.filter(w => !done.has(w));
   console.log(`Kalan: ${toFetch.length} kelime\n`);

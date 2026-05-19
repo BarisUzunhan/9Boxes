@@ -241,8 +241,8 @@ async function checkTDK(word, withMeanings = false) {
           if (!withMeanings) return resolve(found);
           if (!found) return resolve(null);
           const meanings = json.flatMap(entry =>
-            (entry.anlam_icerik || []).map(a => {
-              const ozellik = (a.ozellik_icerik || []).map(o => o.tam_adi).filter(Boolean).join(', ');
+            (entry.anlamlarListe || []).map(a => {
+              const ozellik = (a.ozelliklerListe || []).map(o => o.tam_adi).filter(Boolean).join(', ');
               return ozellik ? `(${ozellik}) ${a.anlam}` : a.anlam;
             })
           ).filter(Boolean).slice(0, 5);
