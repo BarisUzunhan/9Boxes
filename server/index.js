@@ -235,6 +235,7 @@ async function checkTDK(word, withMeanings = false) {
       let data = '';
       res.on('data', d => data += d);
       res.on('end', () => {
+        console.log(`[TDK-DEBUG] word=${word} status=${res.statusCode} body_start=${data.slice(0,200)}`);
         try {
           const json = JSON.parse(data);
           const found = Array.isArray(json) && json.length > 0;
@@ -247,7 +248,7 @@ async function checkTDK(word, withMeanings = false) {
             })
           ).filter(Boolean).slice(0, 5);
           resolve({ word, meanings });
-        } catch { resolve(withMeanings ? null : false); }
+        } catch (e) { console.log(`[TDK-DEBUG] parse error: ${e.message}`); resolve(withMeanings ? null : false); }
       });
     });
     req.on('error', () => resolve(withMeanings ? null : false));
