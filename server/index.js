@@ -356,6 +356,23 @@ app.get('/admin', requireAdmin, (req, res) => {
     .add-form input:focus{border-color:#e94560}
     .btn-add{padding:10px 20px;border-radius:8px;border:none;background:#e94560;color:#fff;font-size:.95rem;cursor:pointer;font-weight:600}
     .btn-approve{padding:5px 12px;border-radius:6px;border:none;background:#06d6a0;color:#000;font-size:.82rem;cursor:pointer;font-weight:700}
+    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
+    .modal-backdrop.open{display:flex}
+    .modal-box{background:#1a1a2e;border-radius:16px;padding:24px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;border:1px solid #333}
+    .modal-word{color:#e94560;font-size:1.5rem;font-weight:700;margin-bottom:4px}
+    .modal-hint{color:#8892b0;font-size:.82rem;margin-bottom:18px}
+    .meaning-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+    .meaning-row select{padding:8px 10px;border-radius:8px;border:1px solid #333;background:#0f0e17;color:#8892b0;font-size:.85rem;outline:none;flex-shrink:0}
+    .meaning-row input{flex:1;padding:8px 12px;border-radius:8px;border:1px solid #333;background:#0f0e17;color:#fff;font-size:.9rem;outline:none}
+    .meaning-row input:focus,.meaning-row select:focus{border-color:#e94560}
+    .btn-rm{background:transparent;border:1px solid #444;color:#8892b0;padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.8rem;flex-shrink:0}
+    .btn-rm:hover{border-color:#e94560;color:#e94560}
+    .btn-add-meaning{padding:8px 16px;border-radius:8px;border:1px dashed #444;background:transparent;color:#8892b0;font-size:.85rem;cursor:pointer;width:100%;margin-bottom:16px}
+    .btn-add-meaning:hover{border-color:#4cc9f0;color:#4cc9f0}
+    .modal-actions{display:flex;gap:8px;margin-top:4px}
+    .btn-confirm{flex:1;padding:10px;border-radius:8px;border:none;background:#06d6a0;color:#000;font-size:.95rem;cursor:pointer;font-weight:700}
+    .btn-cancel{padding:10px 18px;border-radius:8px;border:1px solid #444;background:transparent;color:#8892b0;font-size:.95rem;cursor:pointer}
+    .btn-cancel:hover{border-color:#e94560;color:#e94560}
     .btn-del{background:transparent;border:1px solid #444;color:#8892b0;padding:5px 10px;border-radius:6px;font-size:.82rem;cursor:pointer}
     .btn-del:hover{border-color:#e94560;color:#e94560}
     .word-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;margin-bottom:4px;background:#0f0e17}
@@ -434,6 +451,20 @@ app.get('/admin', requireAdmin, (req, res) => {
     </div>
   </div>
 
+  <!-- Anlam Giriş Popup -->
+  <div id="approve-modal" class="modal-backdrop">
+    <div class="modal-box">
+      <div id="modal-word" class="modal-word"></div>
+      <div class="modal-hint">Sözlüğe eklenecek. İsterseniz anlam bilgisi girin.</div>
+      <div id="meanings-container"></div>
+      <button class="btn-add-meaning" onclick="addMeaningRow()">+ Anlam Ekle</button>
+      <div class="modal-actions">
+        <button class="btn-confirm" onclick="submitApprove()">✓ Onayla ve Kaydet</button>
+        <button class="btn-cancel" onclick="closeApproveModal()">İptal</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     function showMsg(text, ok) {
       const el = document.getElementById('msg');
@@ -504,15 +535,66 @@ app.get('/admin', requireAdmin, (req, res) => {
           '<span class="word-text">'+d.word+'<span class="badge badge-dispute">İtiraz</span>'+
           '<span class="dispute-date">'+date+'</span></span>'+
           '<div class="row-actions">'+
-          '<button class="btn-approve" onclick="resolveDispute('+d.id+',\\'approve\\')">✓ Onayla</button>'+
+          '<button class="btn-approve" onclick="openApproveModal('+d.id+',\\''+d.word+'\\')">✓ Onayla</button>'+
           '<button class="btn-del" onclick="resolveDispute('+d.id+',\\'reject\\')">✕ Reddet</button>'+
           '</div></div>';
       }).join('');
     }
 
-    async function resolveDispute(id, action) {
+    let _approveId = null;
+
+    const WORD_TYPES = ['','isim','fiil','sıfat','zarf','zamir','edat','bağlaç','ünlem'];
+
+    function openApproveModal(id, word) {
+      _approveId = id;
+      document.getElementById('modal-word').textContent = word;
+      document.getElementById('meanings-container').innerHTML = '';
+      addMeaningRow();
+      document.getElementById('approve-modal').classList.add('open');
+    }
+
+    function closeApproveModal() {
+      document.getElementById('approve-modal').classList.remove('open');
+      _approveId = null;
+    }
+
+    function addMeaningRow() {
+      const c = document.getElementById('meanings-container');
+      const row = document.createElement('div');
+      row.className = 'meaning-row';
+      const sel = document.createElement('select');
+      WORD_TYPES.forEach(t => {
+        const o = document.createElement('option');
+        o.value = t; o.textContent = t || '— tür —';
+        sel.appendChild(o);
+      });
+      const inp = document.createElement('input');
+      inp.placeholder = 'Anlam metni';
+      const rm = document.createElement('button');
+      rm.className = 'btn-rm'; rm.textContent = '✕';
+      rm.onclick = () => row.remove();
+      row.appendChild(sel); row.appendChild(inp); row.appendChild(rm);
+      c.appendChild(row);
+      inp.focus();
+    }
+
+    async function submitApprove() {
+      if (!_approveId) return;
+      const rows = document.querySelectorAll('#meanings-container .meaning-row');
+      const meanings = [];
+      rows.forEach(row => {
+        const type = row.querySelector('select').value.trim();
+        const text = row.querySelector('input').value.trim();
+        if (text) meanings.push(type ? '('+type+') '+text : text);
+      });
+      await resolveDispute(_approveId, 'approve', meanings);
+      closeApproveModal();
+    }
+
+    async function resolveDispute(id, action, meanings) {
       const res = await fetch('/api/disputes/'+id, {
-        method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action})
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ action, meanings: meanings || [] })
       });
       const d = await res.json();
       if (d.ok) {
@@ -676,7 +758,7 @@ app.post('/api/disputes', async (req, res) => {
 
 app.patch('/api/disputes/:id', requireAdmin, async (req, res) => {
   const id = parseInt(req.params.id);
-  const { action } = req.body;
+  const { action, meanings } = req.body;
   if (!['approve', 'reject'].includes(action)) return res.json({ ok: false, error: 'Geçersiz işlem.' });
 
   const { data: dispute } = await supabase.from('disputes').select('*').eq('id', id).maybeSingle();
@@ -692,6 +774,9 @@ app.patch('/api/disputes/:id', requireAdmin, async (req, res) => {
       writeWords(data);
     }
     _wordSet.add(dispute.word);
+    if (Array.isArray(meanings) && meanings.length > 0) {
+      await supabase.from('word_meanings').upsert({ word: dispute.word, meanings });
+    }
   }
 
   res.json({ ok: true, word: dispute.word });
