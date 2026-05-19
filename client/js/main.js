@@ -1405,12 +1405,12 @@ async function showMeaning(word) {
   popup.hidden = false;
 
   try {
-    const res = await fetch(`/api/meaning/${encodeURIComponent(word.toLowerCase())}`);
+    const res = await fetch(`/api/meaning/${encodeURIComponent(word.toLocaleLowerCase('tr-TR'))}`);
     const data = await res.json();
     if (data && data.meanings && data.meanings.length > 0) {
       bodyEl.innerHTML = '<ol>' + data.meanings.map(m => `<li>${m}</li>`).join('') + '</ol>';
     } else {
-      bodyEl.innerHTML = '<div class="no-meaning">TDK sözlüğünde tanım bulunamadı.</div>';
+      bodyEl.innerHTML = '<div class="no-meaning">Tanım bulunamadı.</div>';
     }
   } catch {
     bodyEl.innerHTML = '<div class="no-meaning">Anlam yüklenemedi.</div>';
