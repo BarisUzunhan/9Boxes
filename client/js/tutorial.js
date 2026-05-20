@@ -26,6 +26,11 @@ const SECTIONS = {
       text: 'Kullanıcı adın, seviye ve oyun istatistiklerin burada. Profilini görüntülemek için buna bas.',
     },
     {
+      sel: '#btn-friends-lobby',
+      title: 'Arkadaşlar',
+      text: 'Arkadaşlarını buradan yönetebilirsin. Kullanıcı ara, arkadaşlık isteği gönder — çevrimiçi arkadaşlarını oyuna davet et!',
+    },
+    {
       sel: '#btn-settings-lobby',
       title: 'Ayarlar',
       text: 'Tema (koyu/açık) ve ses gibi tercihlerini buradan değiştirebilirsin.',

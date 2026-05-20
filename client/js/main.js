@@ -1536,6 +1536,12 @@ async function removeFriend(friendshipId) {
 document.getElementById('btn-friends-search').addEventListener('click', searchFriends);
 document.getElementById('friends-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchFriends(); });
 
+// inline onclick'ler module scope'u göremez, window'a bağla
+window.sendFriendRequest = sendFriendRequest;
+window.respondRequest    = respondRequest;
+window.removeFriend      = removeFriend;
+window.inviteFriend      = inviteFriend;
+
 function inviteFriend(userId, username) {
   socket.emit('friend_invite', { toUserId: userId });
   showToast(`${username} adlı oyuncuya davet gönderildi (30 sn)`);
