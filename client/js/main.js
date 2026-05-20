@@ -1552,6 +1552,45 @@ function inviteFriend(userId, username) {
   showToast(`${username} adlı oyuncuya davet gönderildi (30 sn)`);
 }
 
+// ─── E-posta ile Davet ───────────────────────────────────────
+
+document.getElementById('btn-invite-by-email').addEventListener('click', () => {
+  document.getElementById('invite-email-input').value = '';
+  document.getElementById('invite-name-input').value = currentUser?.username || '';
+  const err = document.getElementById('invite-email-error');
+  err.hidden = true;
+  document.getElementById('invite-email-modal').hidden = false;
+  document.getElementById('invite-email-input').focus();
+});
+
+document.getElementById('btn-invite-email-cancel').addEventListener('click', () => {
+  document.getElementById('invite-email-modal').hidden = true;
+});
+
+document.getElementById('btn-invite-email-send').addEventListener('click', async () => {
+  const email    = document.getElementById('invite-email-input').value.trim();
+  const fromName = document.getElementById('invite-name-input').value.trim();
+  const errEl    = document.getElementById('invite-email-error');
+  const btn      = document.getElementById('btn-invite-email-send');
+
+  errEl.hidden = true;
+  if (!email || !fromName) { errEl.textContent = 'Lütfen tüm alanları doldur.'; errEl.hidden = false; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Gönderiliyor...';
+  const data = await apiFetch('POST', '/api/friends/invite-email', { email, fromName });
+  btn.disabled = false;
+  btn.textContent = 'Gönder';
+
+  if (data.ok) {
+    document.getElementById('invite-email-modal').hidden = true;
+    showToast('Davet maili gönderildi!');
+  } else {
+    errEl.textContent = data.error || 'Bir hata oluştu.';
+    errEl.hidden = false;
+  }
+});
+
 // ─── Oyun Daveti (gelen) ─────────────────────────────────────
 
 let _inviteTimer = null;

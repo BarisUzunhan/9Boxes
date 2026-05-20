@@ -292,6 +292,25 @@
         <div class="friends-section-title">Arkadaşlar <span id="friends-count-badge" class="friends-badge"></span></div>
         <div id="friends-list"><div class="friends-empty">Henüz arkadaşın yok. Yukarıdan ara!</div></div>
       </div>
+      <div class="friends-invite-email-bar">
+        <button id="btn-invite-by-email" class="btn-invite-email">✉ E-posta ile Davet Et</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- E-posta Davet Modalı -->
+  <div id="invite-email-modal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <h3 class="modal-title">E-posta ile Davet Et</h3>
+      <label class="modal-label">Arkadaşının e-posta adresi</label>
+      <input id="invite-email-input" class="modal-input" type="email" placeholder="ornek@mail.com" autocomplete="off">
+      <label class="modal-label">Adın (mailin içinde görünecek)</label>
+      <input id="invite-name-input" class="modal-input" type="text" placeholder="Adın" autocomplete="off">
+      <p id="invite-email-error" class="modal-error" hidden></p>
+      <div class="modal-actions">
+        <button id="btn-invite-email-send" class="btn-primary">Gönder</button>
+        <button id="btn-invite-email-cancel" class="btn-secondary">Vazgeç</button>
+      </div>
     </div>
   </div>
 

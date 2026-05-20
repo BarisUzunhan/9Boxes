@@ -125,6 +125,61 @@ async function sendPasswordResetEmail(to, token, username) {
   });
 }
 
+async function sendInviteEmail(to, fromName, fromUsername) {
+  const link = APP_URL;
+  const body = JSON.stringify({
+    sender:      { name: 'Verbum9', email: process.env.BREVO_SENDER_EMAIL },
+    to:          [{ email: to }],
+    subject:     `${fromName} seni Verbum9'a davet ediyor!`,
+    htmlContent: `
+      <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px;background:#0f0e17;color:#fff;border-radius:16px">
+        <h1 style="margin:0 0 24px;letter-spacing:-1px">
+          <span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span>
+        </h1>
+        <p style="font-size:1rem;margin:0 0 16px">Merhaba!</p>
+        <p style="color:#ccd6f6;line-height:1.7;margin:0 0 24px">
+          Arkadaşın <strong style="color:#fff">${fromName}</strong>,
+          <strong style="color:#4cc9f0">${fromUsername}</strong> kullanıcı adıyla Verbum9 oynuyor
+          ve seninle beraber oynamanın harika olacağını düşündü.<br><br>
+          Sen de onunla oynamak istersen aşağıdaki butona basarak kaydol ve hemen oynamaya başla!
+        </p>
+        <a href="${link}"
+           style="display:inline-block;padding:14px 28px;background:#e94560;color:#fff;
+                  border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem">
+          Verbum9'a Katıl →
+        </a>
+        <p style="color:#8892b0;font-size:0.8rem;margin-top:24px;word-break:break-all">
+          Buton çalışmıyorsa: ${link}
+        </p>
+      </div>
+    `,
+  });
+
+  await new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.brevo.com',
+      path:     '/v3/smtp/email',
+      method:   'POST',
+      headers:  {
+        'accept':         'application/json',
+        'api-key':        (process.env.BREVO_API_KEY || '').trim(),
+        'content-type':   'application/json',
+        'content-length': String(Buffer.byteLength(body)),
+      },
+    }, res => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve();
+        else reject(new Error(`Brevo ${res.statusCode}: ${data}`));
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 function resetPasswordPage(token) {
   return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1009,6 +1064,20 @@ app.delete('/api/friends/:id', requireAuth, async (req, res) => {
   await supabase.from('friendships').delete().eq('id', id)
     .or(`requester_id.eq.${req.user.id},addressee_id.eq.${req.user.id}`);
   res.json({ ok: true });
+});
+
+app.post('/api/friends/invite-email', requireAuth, async (req, res) => {
+  const { email, fromName } = req.body;
+  if (!email || !fromName) return res.json({ ok: false, error: 'E-posta ve isim gerekli.' });
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return res.json({ ok: false, error: 'Geçersiz e-posta adresi.' });
+  try {
+    await sendInviteEmail(email.trim(), fromName.trim(), req.user.username);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Davet maili gönderilemedi:', e.message);
+    res.json({ ok: false, error: 'Mail gönderilemedi, lütfen tekrar dene.' });
+  }
 });
 
 // ─── Socket.IO — Çok Oyunculu Motor ─────────────────────────

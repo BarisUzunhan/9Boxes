@@ -2045,3 +2045,84 @@ html, body {
   width: 100%;
   transition: width 1s linear;
 }
+
+/* ─── E-posta Davet Butonu ─── */
+.friends-invite-email-bar {
+  padding: 16px 0 8px;
+  text-align: center;
+}
+
+.btn-invite-email {
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-invite-email:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ─── Genel Modal ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 900;
+}
+
+.modal-box {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: min(420px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.modal-label {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1.5px solid #2a3d6e;
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.modal-input:focus { border-color: var(--accent); }
+
+.modal-error {
+  color: var(--danger, #e94560);
+  font-size: 0.83rem;
+  margin-top: 2px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
