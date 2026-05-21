@@ -23,7 +23,10 @@
         </div>
         <div class="form-group">
           <label for="login-password">Şifre</label>
-          <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••">
+          <div class="password-wrap">
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••">
+            <button type="button" class="btn-show-password" data-target="login-password" tabindex="-1">👁</button>
+          </div>
         </div>
         <button type="submit" id="btn-login" class="btn-primary auth-submit">Giriş Yap</button>
         <div class="auth-switch-row">
@@ -43,7 +46,17 @@
         </div>
         <div class="form-group">
           <label for="reg-password">Şifre</label>
-          <input id="reg-password" type="password" autocomplete="new-password" placeholder="en az 6 karakter">
+          <div class="password-wrap">
+            <input id="reg-password" type="password" autocomplete="new-password" placeholder="en az 6 karakter">
+            <button type="button" class="btn-show-password" data-target="reg-password" tabindex="-1">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reg-password2">Şifre Tekrar</label>
+          <div class="password-wrap">
+            <input id="reg-password2" type="password" autocomplete="new-password" placeholder="şifreni tekrar gir">
+            <button type="button" class="btn-show-password" data-target="reg-password2" tabindex="-1">👁</button>
+          </div>
         </div>
         <button type="submit" id="btn-register" class="btn-primary auth-submit">Kayıt Ol</button>
         <p class="auth-switch">Zaten hesabın var mı? <button type="button" id="btn-to-login" class="auth-switch-btn">Giriş Yap</button></p>

@@ -469,10 +469,12 @@ function bindAuth() {
 
   document.getElementById('form-register').addEventListener('submit', async e => {
     e.preventDefault();
-    const username = document.getElementById('reg-username').value.trim();
-    const email    = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
+    const username  = document.getElementById('reg-username').value.trim();
+    const email     = document.getElementById('reg-email').value.trim();
+    const password  = document.getElementById('reg-password').value;
+    const password2 = document.getElementById('reg-password2').value;
     setAuthError('');
+    if (password !== password2) { setAuthError('Şifreler eşleşmiyor.'); return; }
     const btn = document.getElementById('btn-register');
     btn.disabled = true;
     const data = await apiFetch('POST', '/api/auth/register', { username, email, password });
@@ -484,6 +486,16 @@ function bindAuth() {
     } else if (!data.ok) {
       setAuthError(data.error);
     }
+  });
+
+  // Şifre göster/gizle
+  document.querySelectorAll('.btn-show-password').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.style.opacity = input.type === 'text' ? '1' : '0.5';
+    });
   });
 }
 

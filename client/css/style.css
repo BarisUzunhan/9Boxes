@@ -145,6 +145,32 @@ html, body {
   text-transform: uppercase;
 }
 
+.password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrap input {
+  flex: 1;
+  padding-right: 42px !important;
+}
+
+.btn-show-password {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.5;
+  padding: 0;
+  line-height: 1;
+  transition: opacity 0.15s;
+}
+
+.btn-show-password:hover { opacity: 1; }
+
 .form-group input {
   background: var(--surface2);
   border: 1px solid rgba(255,255,255,0.08);
