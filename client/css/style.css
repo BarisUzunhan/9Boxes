@@ -2347,38 +2347,59 @@ html, body {
   padding: 0;
 }
 
-/* Oda kodu chip (nav içinde) */
-.mh-code-chip {
-  font-size: .82rem;
+/* Oda kodu kart — matris genişliğiyle hizalı */
+.mh-code-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1.5px solid rgba(76,201,240,0.25);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  width: calc(3 * var(--tile-size) + 16px);
+}
+
+.mh-code-label-text {
+  font-size: .7rem;
   color: var(--text-dim);
-  background: var(--surface2);
-  border-radius: 8px;
-  padding: 4px 10px;
-  letter-spacing: 1px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  flex-shrink: 0;
 }
 
-.mh-code-chip strong {
+#mh-code-val {
+  font-size: 1.4rem;
+  letter-spacing: 6px;
   color: var(--accent2);
-  font-size: 1rem;
-  letter-spacing: 4px;
   font-family: monospace;
+  font-weight: 700;
+  flex: 1;
+  text-align: center;
 }
 
-/* Davet Et + Oyunu Başlat yan yana satır */
+.btn-mh-copy {
+  background: transparent;
+  border: 1px solid rgba(76,201,240,0.3);
+  color: var(--accent2);
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .85rem;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.btn-mh-copy:hover { background: rgba(76,201,240,0.1); }
+
+/* Davet Et + Oyunu Başlat — matris genişliğiyle hizalı */
 .mh-action-row {
   display: flex;
   gap: 10px;
-  width: 100%;
-  align-items: flex-end;
+  width: calc(3 * var(--tile-size) + 16px);
+  align-items: stretch;
 }
 
-.mh-action-row .mh-invite-wrap {
-  flex: 1;
-}
-
-.mh-action-row .mh-invite-btn {
-  width: 100%;
-}
+.mh-action-row .mh-invite-wrap { flex: 1; }
+.mh-action-row .mh-invite-btn  { width: 100%; }
 
 .mh-start-btn {
   flex: 1.4;

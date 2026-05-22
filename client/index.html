@@ -587,7 +587,6 @@
     <div class="screen-nav">
       <button id="btn-mh-close" class="btn-nav-home">← Çık</button>
       <div class="nav-user-group">
-        <div class="mh-code-chip">KOD: <strong id="mh-code-val">——</strong></div>
         <div id="mh-nav-avatar" class="nav-avatar-tiny">?</div>
       </div>
     </div>
@@ -595,6 +594,12 @@
       <div class="fill-header">
         <h2>Harfleri Seç</h2>
         <p class="fill-hint">9 harf seçtikten sonra oyunu başlatabilirsin</p>
+      </div>
+      <!-- Oda kodu — matris genişliğinde belirgin kart -->
+      <div class="mh-code-display">
+        <span class="mh-code-label-text">Oda Kodu</span>
+        <strong id="mh-code-val">——</strong>
+        <button class="btn-mh-copy" id="btn-mh-copy-code" title="Kopyala">📋</button>
       </div>
       <div id="mh-matrix" class="matrix-grid fill-mode"></div>
       <div class="fill-actions">

@@ -1927,6 +1927,10 @@ function setupHostScreen(code) {
   document.getElementById('btn-mh-start').disabled = true;
   const avatarEl = document.getElementById('mh-nav-avatar');
   if (avatarEl && currentUser) avatarEl.textContent = (currentUser.username || '?')[0].toUpperCase();
+  document.getElementById('btn-mh-copy-code').onclick = () => {
+    navigator.clipboard?.writeText(code).catch(() => {});
+    showToast(`Kod kopyalandı: ${code}`, 3000);
+  };
 
   // Matris oluştur
   const container = document.getElementById('mh-matrix');
