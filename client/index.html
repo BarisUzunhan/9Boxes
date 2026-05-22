@@ -584,28 +584,29 @@
 
   <!-- EKRAN: Oda Kurulum (Host) -->
   <div id="screen-multi-host" class="screen">
-    <div class="mh-nav">
-      <div class="mh-code-badge">
-        <span class="mh-code-label">Oda Kodu</span>
-        <span class="mh-code-val" id="mh-code-val">——</span>
+    <div class="screen-nav">
+      <button id="btn-mh-close" class="btn-nav-home">← Çık</button>
+      <div class="nav-user-group">
+        <div class="mh-code-chip">KOD: <strong id="mh-code-val">——</strong></div>
+        <div id="mh-nav-avatar" class="nav-avatar-tiny">?</div>
       </div>
-      <button id="btn-mh-close" class="btn-secondary mh-close-btn">✕ Kapat</button>
     </div>
-    <div class="mh-body">
-      <div class="mh-fill-section">
-        <p class="mh-label">9 harf seç</p>
-        <div id="mh-matrix" class="matrix-grid fill-mode mh-matrix"></div>
-        <div class="mh-fill-btns">
-          <button class="btn-secondary mh-btn" id="btn-mh-rand-one">🎲 Bu Hücre</button>
-          <button class="btn-secondary mh-btn" id="btn-mh-rand-all">🎲 Tümünü</button>
-        </div>
-        <div class="mh-duration-row">
-          <span class="mh-dur-label">Süre:</span>
-          <button class="mh-dur-btn" data-dur="120">2 dk</button>
-          <button class="mh-dur-btn mh-dur-active" data-dur="180">3 dk</button>
-          <button class="mh-dur-btn" data-dur="240">4 dk</button>
-          <button class="mh-dur-btn" data-dur="300">5 dk</button>
-        </div>
+    <div class="fill-body mh-fill-body">
+      <div class="fill-header">
+        <h2>Harfleri Seç</h2>
+        <p class="fill-hint">9 harf seçtikten sonra oyunu başlatabilirsin</p>
+      </div>
+      <div id="mh-matrix" class="matrix-grid fill-mode"></div>
+      <div class="fill-actions">
+        <button class="btn-secondary" id="btn-mh-rand-one">🎲 Bu Hücreyi</button>
+        <button class="btn-secondary" id="btn-mh-rand-all">🎲 Tümünü</button>
+      </div>
+      <div class="mh-duration-row">
+        <span class="mh-dur-label">Süre:</span>
+        <button class="mh-dur-btn" data-dur="120">2 dk</button>
+        <button class="mh-dur-btn mh-dur-active" data-dur="180">3 dk</button>
+        <button class="mh-dur-btn" data-dur="240">4 dk</button>
+        <button class="mh-dur-btn" data-dur="300">5 dk</button>
       </div>
       <div class="mh-players-section">
         <div class="mh-section-title">Oyuncular (<span id="mh-player-count">1</span>)</div>
@@ -623,7 +624,7 @@
           <button class="mh-inv-opt" id="btn-mh-inv-friends">⚡ Arkadaşlarımı davet et</button>
         </div>
       </div>
-      <button class="btn-primary btn-large mh-start-btn" id="btn-mh-start" disabled>Oyunu Başlat</button>
+      <button class="btn-primary btn-large" id="btn-mh-start" disabled>Oyunu Başlat</button>
     </div>
     <input id="mh-keyboard-input" type="text" inputmode="text" autocomplete="off" autocorrect="off"
       autocapitalize="characters" aria-hidden="true" tabindex="-1"
@@ -635,7 +636,7 @@
     <div class="exit-confirm-backdrop"></div>
     <div class="exit-confirm-content" style="max-width:400px;max-height:70vh;overflow-y:auto">
       <p class="exit-confirm-text" style="margin-bottom:12px">Arkadaşlarını Davet Et</p>
-      <p style="color:var(--text-dim);font-size:.85rem;margin-bottom:12px">Çevrimiçi arkadaşlarından seçebilirsin.</p>
+      <p style="color:var(--text-dim);font-size:.85rem;margin-bottom:12px">Davet sadece çevrimiçi olanlara ulaşır.</p>
       <div id="mhf-list"></div>
       <div class="exit-confirm-actions" style="margin-top:12px">
         <button id="btn-mhf-cancel" class="btn-secondary">İptal</button>

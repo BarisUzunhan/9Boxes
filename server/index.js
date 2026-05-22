@@ -1613,9 +1613,14 @@ io.on('connection', socket => {
 
   socket.on('grp_invite_friends', async ({ code, friendIds }) => {
     const room = groupRooms.get(code);
-    if (!room || room.host.socket.id !== socket.id) return;
+    if (!room || room.status !== 'lobby') return;
     const fromUser = await userService.getUserByToken(authToken);
-    if (!fromUser) return;
+    if (!fromUser || String(fromUser.id) !== String(room.host.userId)) return;
+    // Socket yeniden bağlanmışsa güncelle
+    if (room.host.socket?.id !== socket.id) {
+      room.host.socket = socket;
+      socketGroupRoom.set(socket.id, code);
+    }
     let sent = 0;
     for (const fid of (friendIds || [])) {
       const target = onlineUsers.get(String(fid));

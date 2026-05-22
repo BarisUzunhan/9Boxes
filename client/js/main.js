@@ -1925,6 +1925,8 @@ function setupHostScreen(code) {
 
   document.getElementById('mh-code-val').textContent = code;
   document.getElementById('btn-mh-start').disabled = true;
+  const avatarEl = document.getElementById('mh-nav-avatar');
+  if (avatarEl && currentUser) avatarEl.textContent = (currentUser.username || '?')[0].toUpperCase();
 
   // Matris oluştur
   const container = document.getElementById('mh-matrix');
@@ -2054,19 +2056,18 @@ document.getElementById('btn-mh-inv-code').addEventListener('click', () => {
 
 document.getElementById('btn-mh-inv-friends').addEventListener('click', async () => {
   document.getElementById('mh-invite-panel').hidden = true;
-  // Online arkadaşları yükle
   const res = await fetch('/api/friends', { headers: { Authorization: 'Bearer ' + localStorage.getItem(TOKEN_KEY) } });
   const friends = await res.json();
-  const online = friends.filter(f => f.online);
   const list = document.getElementById('mhf-list');
   _grpSelectedFriendIds.clear();
-  if (online.length === 0) {
-    list.innerHTML = '<p style="color:var(--text-dim);font-size:.9rem;text-align:center">Şu an çevrimiçi arkadaşın yok.</p>';
+  if (!friends || friends.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-dim);font-size:.9rem;text-align:center">Henüz arkadaşın yok.</p>';
   } else {
-    list.innerHTML = online.map(f =>
+    list.innerHTML = friends.map(f =>
       `<label class="mhf-friend-row">
-        <input type="checkbox" data-uid="${f.userId}" onchange="if(this.checked)_grpSelectedFriendIds.add(${f.userId});else _grpSelectedFriendIds.delete(${f.userId})">
+        <input type="checkbox" data-uid="${f.userId}" onchange="if(this.checked)window._grpSelectedFriendIds.add('${f.userId}');else window._grpSelectedFriendIds.delete('${f.userId}')">
         <span class="mhf-friend-name">${f.username}</span>
+        <span style="font-size:.75rem;color:${f.online ? '#06d6a0' : 'var(--text-dim)'}">● ${f.online ? 'Çevrimiçi' : 'Çevrimdışı'}</span>
       </label>`
     ).join('');
   }
