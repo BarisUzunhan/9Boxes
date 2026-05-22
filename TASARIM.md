@@ -17,19 +17,18 @@ Dokümanda tanımlı geniş özellik kümesi: 1v1 online + tek oyunculu + sını
 
 ## Teknoloji Yığını
 
-| Katman | Seçim | Neden |
+| Katman | Seçim | Notlar |
 |---|---|---|
-| **Frontend** | Vanilla **HTML + CSS + JavaScript** (ES module) | Mevcut bilgi seviyesine uygun; framework öğrenme yükü yok. |
-| **PWA** | `manifest.json` + Service Worker | Mobilde ana ekrana eklenir, offline tek oyunculu çalışır. |
-| **Backend** | **Node.js + Express** | JavaScript tek dilli → öğrenme yükü minimum. |
-| **Gerçek zamanlı** | **Socket.IO** | Harf seçimi, kelime yazımı, skor güncellemeleri için. |
-| **Veritabanı (lokal)** | **SQLite** | Tek dosya, kurulum yok. Öğrenirken ideal. |
-| **Veritabanı (canlı)** | **PostgreSQL** (Railway/Supabase) | Yayına çıkarken SQLite'tan göç. Aynı SQL dili. |
-| **ORM** | **Prisma** | Şema tanımı, migration, tip güvenliği. |
-| **Auth** | bcrypt + JWT → sonra **Firebase Auth** | Sosyal login hazır servis ile daha az iş. |
-| **Native (sonradan)** | **Capacitor** | Aynı HTML/CSS/JS → Android+iOS. |
-| **Hosting** | Vercel (frontend) + Railway/Render (backend) | Ücretsiz tier. |
-| **Sözlük** | Açık kaynak + bizim onay katmanı | Kaynak + admin override + kullanıcı itirazı. |
+| **Frontend** | Vanilla **HTML + CSS + JavaScript** (ES module) | Framework yok. |
+| **Backend** | **Node.js + Express** | JavaScript tek dilli. |
+| **Gerçek zamanlı** | **Socket.IO** | 1v1, arkadaş daveti, online durum. |
+| **Veritabanı** | **Supabase** (PostgreSQL) | ORM yok, doğrudan Supabase JS client. |
+| **Auth** | bcrypt + token (users tablosunda) | E-posta doğrulama Brevo ile. |
+| **E-posta** | **Brevo** (transactional) | Doğrulama, şifre sıfırlama, arkadaş daveti. |
+| **Hosting** | **Render** (backend + frontend birlikte) | Ücretsiz tier, otomatik deploy (GitHub). |
+| **Cron** | **cron-job.org** | Supabase ping (uyku önleme) + günlük KL dağıtımı. |
+| **Native (planlı)** | **Capacitor** | Aynı HTML/CSS/JS → Android+iOS. |
+| **Sözlük** | TDK kaynaklı 46.822 kelime | Admin override + kullanıcı itirazı katmanı. |
 
 ---
 
@@ -86,58 +85,55 @@ chat_messages     (game_id, from_user, to_user, message_template_id, sent_at)
 
 ## Aşamalı Yol Haritası
 
-> Her fazın sonunda **çalışan, oynanabilir** bir sürüm olacak.
+### ✅ Faz 0–1 — Tek Oyunculu Çekirdek
+- 3×3 matris UI, harf seçimi (sıralı + rastgele + tümünü doldur).
+- 5 sn geri sayım + 2 dk oyun saati.
+- Kelime girişi, skor, yan panel, özet ekranı, ses efektleri.
 
-### Faz 0 — Hazırlık
-- Klasör yapısı, git init, npm init.
-- Boş Express + statik HTML → "Hello Verbum9".
+### ✅ Faz 2 — Sözlük
+- TDK kaynaklı 46.822 kelime.
+- Sesteş kelime desteği, blacklist, admin override.
+- 46.819 kelimenin Supabase'de anlamları (word_meanings tablosu).
 
-### Faz 1 — Tek Oyunculu Çekirdek (backend yok)
-- 3×3 matris UI, harf seçimi (sıralı + rastgele).
-- 5 sn geri sayım + 3 dk oyun saati.
-- Kelime girişi (matris harfleri kontrolü + statik sözlük).
-- Skor hesabı, yan panel, özet ekranı, ses efektleri.
-- Mobil dokunmatik uyumlu.
-- **Doğrulama:** Telefon tarayıcısında baştan sona oyun oyna.
+### ✅ Faz 3 — Hesap & Profil
+- Kayıt / giriş (bcrypt + token), e-posta doğrulama (Brevo).
+- Şifre sıfırlama, şifre tekrar + göster/gizle.
+- Profil popup: seviye, puan, KL, istatistikler.
 
-### Faz 2 — Sözlük Altyapısı
-- Açık kaynak Türkçe kelime listesi → SQLite.
-- `/api/dictionary/check` endpoint.
-- Sesteş ve emir kipi filtreleri.
+### ✅ Faz 4 — Online 1v1 (Socket.IO)
+- Eşleştirme kuyruğu.
+- Sıralı harf doldurma (turnus), kelime doğrulama sunucuda.
+- Sonuç: karşılaştırma tablosu, puan hesabı (ortak olmayan kelimeler).
+- Yeniden bağlanma (reconnect), +30sn uzatma.
 
-### Faz 3 — Hesap & Profil & Veritabanı
-- Kayıt / giriş (bcrypt + JWT).
-- Profil sayfası, seviye hesabı.
-- Oyun sonuçları DB'ye.
+### ✅ Faz 5 — KL, İpucu, Günlük Oyun
+- KL bakiyesi; 150 KL = 1 ipucu.
+- Günlük oyun: herkes aynı 9 harfli kelime, 2dk30sn, cron ile gün sonu KL dağıtımı (1.→300, 2.→200, 3.→100, ilk 100→20 KL).
+- Gün sonu KL dağıtımı: cron-job.org → `/api/daily/finalize`.
 
-### Faz 4 — Online 1v1 (Socket.IO)
-- Eşleştirme kuyruğu, bot atama.
-- Oyun odası, kelime doğrulama sunucuda.
-- Sonuç ekranı: kelime karşılaştırma tablosu.
+### ✅ Faz 6 — Sosyal & Arkadaş Sistemi
+- Arkadaş ekleme/çıkarma, arkadaşlık istekleri.
+- Online durum: `last_seen` DB tabanlı (5 dk pencere), son görülme zamanı.
+- Oyun içi arkadaş daveti (socket, 30sn countdown).
+- E-posta ile arkadaş daveti (Brevo).
 
-### Faz 5 — KL Para, İpucu, Seviye, Daily
-- KL bakiyesi (sadece 1v1).
-- 150 KL = 1 ipucu.
-- Günlük oyun (günde 1 kez, ertesi gün sonuçlar).
+### ✅ Faz 7 — Admin Panel & İtiraz
+- `/admin` sayfası: sözlük yönetimi, sesteş kelimeler, blacklist.
+- Kullanıcı itirazı → admin onayı → sözlüğe ekleme (anlam girişiyle birlikte).
 
-### Faz 6 — Sosyal & Çoklu Mod
-- Arkadaş listesi, davet, hazır mesajlar.
-- Çoklu mod (sınıf/salon): puan = harf × olmayan kişi sayısı.
+### 🔲 Faz 8 — Çoklu Mod (Sıradaki)
+- Oda tabanlı: 3–8 oyuncu aynı anda aynı harflerle.
+- Puan = harf sayısı × (yazan sadece sen ise +bonus).
+- Lobi kodu / davet linki ile odaya katılım.
 
-### Faz 7 — Admin Panel & İtiraz Yönetimi
-- `/admin` sayfası, itiraz listesi, onay/red, blacklist.
-
-### Faz 8 — Sosyal Login & PWA
-- Firebase Auth (Google, Facebook, Instagram).
-- `manifest.json` + Service Worker, offline mod.
-
-### Faz 9 — Yayına Alma
-- Vercel + Railway, SQLite→Postgres göçü.
-- Domain, HTTPS, Sentry, analitik.
-
-### Faz 10 — Native (sonradan, opsiyonel)
+### 🔲 Faz 9 — PWA & Native
+- `manifest.json` + Service Worker.
 - Capacitor ile Android + iOS.
-- Push notification.
+- Push notification (arkadaş daveti için).
+
+### 🔲 Faz 10 — Yayına Alma & Monetizasyon
+- CrazyGames SDK + sitelock entegrasyonu.
+- Domain, analitik, KVKK.
 
 ---
 

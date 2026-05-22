@@ -51,6 +51,11 @@ const SECTIONS = {
       text: 'Gerçek zamanlı bir rakiple eşleş ve yarış. Ortak olmayan kelimeler puan getirir — en çok puan toplayan kazanır!',
     },
     {
+      sel: '#mode-daily',
+      title: 'Günlük Oyun',
+      text: 'Her gün herkes aynı harflerle yarışır! 2 dk 30 sn içinde en çok kelimeyi bul. İlk 100\'e girene KL ödülü var.',
+    },
+    {
       sel: '#mode-solo',
       title: 'Deneyelim!',
       text: 'Hadi bir oyun oynayalım! "Tek Oyunculu" butonuna bas — seni matris doldurma, oyun ve sonuç ekranlarında da yönlendireceğiz.',
