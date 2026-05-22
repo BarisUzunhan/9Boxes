@@ -559,9 +559,13 @@
       <button class="btn-primary multi-create-btn" id="btn-grp-rejoin" hidden style="background:var(--accent2)">▶ Aktif Oyuna Dön</button>
       <div class="multi-or">veya</div>
       <button class="btn-primary multi-create-btn" id="btn-multi-create">+ Yeni Oyun Kur</button>
-      <div id="multi-open-section" hidden>
-        <div class="multi-section-title">Açık Odalar</div>
+      <div id="multi-open-section">
+        <div class="multi-open-header">
+          <span class="multi-section-title">Açık Odalar</span>
+          <button id="btn-refresh-open" class="btn-secondary multi-refresh-btn">🔄 Yenile</button>
+        </div>
         <div id="multi-open-list"></div>
+        <p id="multi-open-empty" class="multi-open-empty">Şu an herkese açık oda yok</p>
       </div>
     </div>
   </div>

@@ -1852,10 +1852,14 @@ function goToMultiLobby() {
 
 async function loadOpenRooms() {
   const data = await apiFetch('GET', '/api/group/open');
-  const section = document.getElementById('multi-open-section');
   const list = document.getElementById('multi-open-list');
-  if (!Array.isArray(data) || data.length === 0) { section.hidden = true; return; }
-  section.hidden = false;
+  const empty = document.getElementById('multi-open-empty');
+  if (!Array.isArray(data) || data.length === 0) {
+    list.innerHTML = '';
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
   list.innerHTML = data.map(r =>
     `<div class="multi-open-row" onclick="joinOpenRoom('${r.code}')">
       <div><div class="multi-open-host">${r.hostName}</div><div class="multi-open-info">${r.playerCount} oyuncu</div></div>
@@ -1876,6 +1880,8 @@ function joinOpenRoom(code) {
 window.joinOpenRoom = joinOpenRoom;
 
 document.getElementById('btn-multi-back').addEventListener('click', () => showScreen('screen-lobby'));
+
+document.getElementById('btn-refresh-open').addEventListener('click', loadOpenRooms);
 
 document.getElementById('btn-multi-join-code').addEventListener('click', () => {
   const code = document.getElementById('multi-code-input').value.trim();

@@ -2320,7 +2320,26 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-dim);
+}
+
+.multi-open-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 10px;
+}
+
+.multi-refresh-btn {
+  font-size: .78rem;
+  padding: 5px 11px;
+}
+
+.multi-open-empty {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: .88rem;
+  padding: 16px 0;
+  opacity: .7;
 }
 
 .multi-open-row {
