@@ -2364,6 +2364,29 @@ html, body {
   font-family: monospace;
 }
 
+/* Davet Et + Oyunu Başlat yan yana satır */
+.mh-action-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  align-items: flex-end;
+}
+
+.mh-action-row .mh-invite-wrap {
+  flex: 1;
+}
+
+.mh-action-row .mh-invite-btn {
+  width: 100%;
+}
+
+.mh-start-btn {
+  flex: 1.4;
+  padding: 12px 16px;
+  font-size: .95rem;
+  white-space: nowrap;
+}
+
 /* fill-body için scroll desteği bu ekranda */
 .mh-fill-body {
   overflow-y: auto;

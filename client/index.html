@@ -608,6 +608,19 @@
         <button class="mh-dur-btn" data-dur="240">4 dk</button>
         <button class="mh-dur-btn" data-dur="300">5 dk</button>
       </div>
+      <!-- Davet Et + Oyunu Başlat yan yana -->
+      <div class="mh-action-row">
+        <div class="mh-invite-wrap">
+          <button class="btn-secondary mh-invite-btn" id="btn-mh-invite">👥 Davet Et ▾</button>
+          <div id="mh-invite-panel" class="mh-invite-panel" hidden>
+            <button class="mh-inv-opt" id="btn-mh-inv-open">👥 İsteyen girebilsin</button>
+            <button class="mh-inv-opt" id="btn-mh-inv-code">🔑 Kodu paylaş</button>
+            <button class="mh-inv-opt" id="btn-mh-inv-friends">⚡ Arkadaşlarımı davet et</button>
+          </div>
+        </div>
+        <button class="btn-primary mh-start-btn" id="btn-mh-start" disabled>Oyunu Başlat</button>
+      </div>
+      <!-- Oyuncular en altta -->
       <div class="mh-players-section">
         <div class="mh-section-title">Oyuncular (<span id="mh-player-count">1</span>)</div>
         <div id="mh-players-list"></div>
@@ -616,15 +629,6 @@
           <div id="mh-pending-list"></div>
         </div>
       </div>
-      <div class="mh-invite-wrap">
-        <button class="btn-secondary mh-invite-btn" id="btn-mh-invite">👥 Davet Et ▾</button>
-        <div id="mh-invite-panel" class="mh-invite-panel" hidden>
-          <button class="mh-inv-opt" id="btn-mh-inv-open">👥 İsteyen girebilsin</button>
-          <button class="mh-inv-opt" id="btn-mh-inv-code">🔑 Kodu paylaş</button>
-          <button class="mh-inv-opt" id="btn-mh-inv-friends">⚡ Arkadaşlarımı davet et</button>
-        </div>
-      </div>
-      <button class="btn-primary btn-large" id="btn-mh-start" disabled>Oyunu Başlat</button>
     </div>
     <input id="mh-keyboard-input" type="text" inputmode="text" autocomplete="off" autocorrect="off"
       autocapitalize="characters" aria-hidden="true" tabindex="-1"

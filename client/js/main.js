@@ -2302,18 +2302,22 @@ socket.on('grp_timer_tick', ({ timeLeft }) => {
 });
 
 socket.on('grp_word_result', result => {
-  if (result.status === 'valid') playWordFound();
-  else if (result.status === 'invalid') playInvalidWord();
+  if (result.status === 'valid') {
+    playWordFound();
+    state.score += result.points;
+    state.submittedWords.push({ word: result.word, points: result.points, valid: true });
+    updateScore();
+    addWordToPanel({ word: result.word, points: result.points, valid: true });
+  } else if (result.status === 'invalid' || result.status === 'duplicate') {
+    playInvalidWord();
+    const isDup = result.status === 'duplicate';
+    state.submittedWords.push({ word: result.word, points: 0, valid: false, duplicate: isDup });
+    addWordToPanel({ word: result.word, points: 0, valid: false, duplicate: isDup });
+  }
   showWordFeedback(result.status, result.word, result.points);
   clearCurrentWord();
   updateGameMatrix();
   updateWordDisplay();
-  if (result.status === 'valid') {
-    updateScore();
-    addWordToPanel({ word: result.word, points: result.points, valid: true });
-  } else if (result.status === 'invalid' || result.status === 'duplicate') {
-    addWordToPanel({ word: result.word, points: 0, valid: false, duplicate: result.status === 'duplicate' });
-  }
 });
 
 socket.on('grp_ended', ({ rankings, words }) => {
