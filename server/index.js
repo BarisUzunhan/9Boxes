@@ -1361,12 +1361,13 @@ async function roomEnd(room) {
   };
   io.to(room.id).emit('game_over', gameResult);
 
-  // Ekran kapalıyken bağlantısı kopmuş oyuncular için sonucu 3 dk sakla
+  // Sadece bağlantısı kopmuş (pendingReconnects'te olan) oyuncular için sakla
   const expiresAt = Date.now() + 3 * 60 * 1000;
-  if (room.tokens[0]) finishedGames.set(room.tokens[0], { result: gameResult, expiresAt });
-  if (room.tokens[1]) finishedGames.set(room.tokens[1], { result: gameResult, expiresAt });
+  if (room.tokens[0] && pendingReconnects.has(room.tokens[0]))
+    finishedGames.set(room.tokens[0], { result: gameResult, expiresAt });
+  if (room.tokens[1] && pendingReconnects.has(room.tokens[1]))
+    finishedGames.set(room.tokens[1], { result: gameResult, expiresAt });
 
-  // Yeniden bağlanma kayıtlarını temizle
   if (room.tokens[0]) pendingReconnects.delete(room.tokens[0]);
   if (room.tokens[1]) pendingReconnects.delete(room.tokens[1]);
   socketRoom.delete(room.players[0].id);
@@ -1531,10 +1532,10 @@ io.on('connection', socket => {
   // Ekran kapalıyken biten oyun var mı? — önce bunu kontrol et
   if (authToken && finishedGames.has(authToken)) {
     const fg = finishedGames.get(authToken);
-    finishedGames.delete(authToken); // tek seferlik gönder
+    finishedGames.delete(authToken);
     if (Date.now() < fg.expiresAt) {
       socket.emit('game_over', fg.result);
-      return; // pendingReconnects'e bakma, oyun bitti
+      // return yok — event handler'lar her koşulda kayıt edilmeli
     }
   }
 
