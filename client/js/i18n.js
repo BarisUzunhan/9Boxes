@@ -111,6 +111,15 @@ const TRANSLATIONS = {
     'daily.start': 'Oynamaya Başla',
     'daily.rank.label': 'Şu anki sıran',
     'daily.rank.note': 'Gün sonunda kesinleşir ve KL ödülün verilir',
+
+    // Lang confirm
+    'lang.confirm.title': 'Dil Ayarı',
+    'lang.confirm.desc': 'Dilediğin zaman dili değiştirebilirsin.',
+    'lang.confirm.current': 'Şu an {name} ile devam ediyoruz.',
+    'lang.confirm.ok': 'Onayla',
+    'lang.confirm.change': 'Dil Seç',
+    'lang.name.tr': 'Türkçe',
+    'lang.name.en': 'English',
   },
 
   en: {
@@ -225,6 +234,15 @@ const TRANSLATIONS = {
     'daily.start': 'Play Now',
     'daily.rank.label': 'Your current rank',
     'daily.rank.note': 'Final at day end, KL reward sent then',
+
+    // Lang confirm
+    'lang.confirm.title': 'Language Setting',
+    'lang.confirm.desc': 'You can change your language at any time.',
+    'lang.confirm.current': 'Currently continuing with {name}.',
+    'lang.confirm.ok': 'Confirm',
+    'lang.confirm.change': 'Choose Language',
+    'lang.name.tr': 'Türkçe',
+    'lang.name.en': 'English',
   },
 };
 

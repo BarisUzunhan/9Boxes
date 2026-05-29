@@ -126,13 +126,10 @@ function loadSettings() {
   });
 }
 
-// ─── Dil seçici (ilk ziyaret) ────────────────────────────────
+// ─── Dil seçici modal ────────────────────────────────────────
 
 function initLangPicker() {
   const modal = document.getElementById('lang-picker-modal');
-  if (!localStorage.getItem('verbum_lang')) {
-    modal.hidden = false;
-  }
   modal.querySelectorAll('.lang-picker-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const lang = btn.dataset.lang;
@@ -140,7 +137,63 @@ function initLangPicker() {
       applyLang(lang);
       switchDictionary(lang);
       modal.hidden = true;
+      _updateAuthLangBtns();
     });
+  });
+  modal.querySelector('.lang-picker-backdrop')?.addEventListener('click', () => {
+    modal.hidden = true;
+  });
+}
+
+function openLangPicker() {
+  document.getElementById('lang-picker-modal').hidden = false;
+}
+
+// ─── Auth ekranı dil çubuğu ──────────────────────────────────
+
+function _updateAuthLangBtns() {
+  const lang = getActiveLang();
+  document.querySelectorAll('.auth-lang-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.lang === lang)
+  );
+}
+
+function initAuthLangBtns() {
+  document.querySelectorAll('.auth-lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const lang = btn.dataset.lang;
+      setActiveLang(lang);
+      applyLang(lang);
+      switchDictionary(lang);
+      _updateAuthLangBtns();
+    });
+  });
+  _updateAuthLangBtns();
+}
+
+// ─── Dil onay modali (kayıt sonrası) ─────────────────────────
+
+const LANG_NAMES = { tr: 'Türkçe', en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', pt: 'Português' };
+
+function showLangConfirmModal() {
+  const modal = document.getElementById('lang-confirm-modal');
+  const lang = getActiveLang();
+  document.getElementById('lang-confirm-current-text').textContent =
+    t('lang.confirm.current', { name: LANG_NAMES[lang] || lang.toUpperCase() });
+  applyLang(lang);
+  modal.hidden = false;
+}
+
+function initLangConfirmModal() {
+  document.getElementById('btn-lang-confirm-ok').addEventListener('click', () => {
+    document.getElementById('lang-confirm-modal').hidden = true;
+  });
+  document.getElementById('btn-lang-confirm-change').addEventListener('click', () => {
+    document.getElementById('lang-confirm-modal').hidden = true;
+    openLangPicker();
+  });
+  document.querySelector('#lang-confirm-modal .lang-picker-backdrop')?.addEventListener('click', () => {
+    document.getElementById('lang-confirm-modal').hidden = true;
   });
 }
 
@@ -408,6 +461,8 @@ async function init() {
   bindExitEvents();
   bindSettingsEvents();
   initLangPicker();
+  initAuthLangBtns();
+  initLangConfirmModal();
   initTutorial();
   onTutorialEnd('lobby', startDemoGame);
   onTutorialEnd('game', endDemoGame);
@@ -558,6 +613,7 @@ function bindAuth() {
       _pendingUsername = username;
       localStorage.setItem('verbum9_new_user', '1');
       showAuthPending(email);
+      showLangConfirmModal();
     } else if (!data.ok) {
       setAuthError(data.error);
     }

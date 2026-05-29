@@ -24,6 +24,10 @@
       <div class="auth-logo">
         <span class="logo-verbum">VERBUM</span><span class="logo-9">9</span>
       </div>
+      <div class="auth-lang-bar">
+        <button class="auth-lang-btn" data-lang="tr">🇹🇷 TR</button>
+        <button class="auth-lang-btn" data-lang="en">🇬🇧 EN</button>
+      </div>
       <div id="auth-error" class="auth-error"></div>
 
       <form id="form-login" class="auth-form" autocomplete="on">
@@ -533,7 +537,21 @@
     </div>
   </div>
 
-  <!-- Dil Seçici Modal (ilk ziyaret) -->
+  <!-- Dil Onay Modali (kayıt sonrası) -->
+  <div id="lang-confirm-modal" class="lang-picker-modal" hidden>
+    <div class="lang-picker-backdrop"></div>
+    <div class="lang-picker-content lang-confirm-content">
+      <h2 class="lang-picker-title" data-i18n="lang.confirm.title">Dil Ayarı</h2>
+      <p class="lang-confirm-desc" data-i18n="lang.confirm.desc">Dilediğin zaman dili değiştirebilirsin.</p>
+      <p class="lang-confirm-current" id="lang-confirm-current-text"></p>
+      <div class="lang-confirm-actions">
+        <button id="btn-lang-confirm-ok" class="btn-primary" data-i18n="lang.confirm.ok">Onayla</button>
+        <button id="btn-lang-confirm-change" class="btn-secondary" data-i18n="lang.confirm.change">Dil Seç</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dil Seçici Modal -->
   <div id="lang-picker-modal" class="lang-picker-modal" hidden>
     <div class="lang-picker-backdrop"></div>
     <div class="lang-picker-content">

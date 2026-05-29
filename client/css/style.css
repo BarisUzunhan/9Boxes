@@ -1850,6 +1850,48 @@ html, body {
 
 /* ─── Dil Seçici Modal ─────────────────────────────────────── */
 
+/* ─── Auth ekranı dil çubuğu ─────────────────────────────── */
+
+.auth-lang-bar {
+  display: flex;
+  gap: 8px;
+}
+.auth-lang-btn {
+  background: var(--surface2);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 5px 12px;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: border-color .18s, color .18s;
+}
+.auth-lang-btn:hover { color: var(--text-primary); }
+.auth-lang-btn.active { border-color: var(--accent); color: var(--text-primary); }
+
+/* ─── Dil onay modali ────────────────────────────────────── */
+
+.lang-confirm-content { min-width: 300px; }
+.lang-confirm-desc {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.lang-confirm-current {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+.lang-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 .lang-picker-modal {
   position: fixed; inset: 0; z-index: 9999;
   display: flex; align-items: center; justify-content: center;
