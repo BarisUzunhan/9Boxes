@@ -396,7 +396,7 @@ function endDemoGame() {
 // ─── Başlatma ────────────────────────────────────────────────
 
 async function init() {
-  await loadDictionary(localStorage.getItem('verbum_lang') || 'tr');
+  try { await loadDictionary(localStorage.getItem('verbum_lang') || 'tr'); } catch (e) { console.warn('[dict] yüklenemedi, TR fallback deneniyor:', e); try { await loadDictionary('tr'); } catch {} }
   loadSettings();
   bindAuth();
   bindLobbyEvents();

@@ -366,8 +366,15 @@ async function requireAuth(req, res, next) {
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../client')));
-// /data → sadece words.json erişilebilir, users.json hariç
+// /data → kelime sözlükleri erişilebilir, başka dosya değil
 app.get('/data/words.json', (req, res) => res.sendFile(WORDS_PATH));
+app.get('/data/words_:lang.json', (req, res) => {
+  const lang = req.params.lang.replace(/[^a-z]/g, '');
+  if (!lang) return res.status(400).end();
+  const p = path.join(__dirname, '../data', `words_${lang}.json`);
+  if (!fs.existsSync(p)) return res.status(404).end();
+  res.sendFile(p);
+});
 
 // ─── Yardımcılar ──────────────────────────────────────────────
 
@@ -794,46 +801,63 @@ app.delete('/api/admin/blacklist/:word', requireAdmin, (req, res) => {
 
 app.get('/api/meaning/:word', async (req, res) => {
   const lang = req.query.lang || 'tr';
+  const cfg = _langConfig[lang] || _langConfig['tr'];
+  const locale = cfg.locale;
+  const rawWord = req.params.word.toLocaleLowerCase(locale);
+  // TR kelimeler Supabase'de düz key ile, diğer diller "lang:word" prefix ile saklanır
+  const dbKey = lang === 'tr' ? rawWord : `${lang}:${rawWord}`;
+  const cacheKey = dbKey;
 
-  if (lang === 'en') {
-    const word = req.params.word.toLocaleLowerCase('en-US');
-    const cacheKey = `en:${word}`;
-    if (_meaningCache.has(cacheKey)) return res.json(_meaningCache.get(cacheKey));
-    try {
-      const raw = await fetchURL(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-      const entries = JSON.parse(raw);
-      const meanings = [];
-      if (Array.isArray(entries)) {
-        for (const entry of entries) {
-          for (const m of (entry.meanings || [])) {
-            const pos = m.partOfSpeech;
-            for (const def of (m.definitions || []).slice(0, 2)) {
-              meanings.push(`(${pos}) ${def.definition}`);
-              if (meanings.length >= 5) break;
-            }
+  if (_meaningCache.has(cacheKey)) return res.json(_meaningCache.get(cacheKey));
+
+  // Önce oyunun kendi sözlük DB'sini kontrol et
+  const { data: stored } = await supabase
+    .from('word_meanings')
+    .select('meanings')
+    .eq('word', dbKey)
+    .maybeSingle();
+  if (stored) {
+    const result = { word: rawWord, meanings: stored.meanings };
+    _meaningCache.set(cacheKey, result);
+    return res.json(result);
+  }
+
+  // Türkçe için dış API çağrısı yapılmıyor — sadece oyun DB'si
+  if (lang === 'tr') {
+    _meaningCache.set(cacheKey, null);
+    return res.json(null);
+  }
+
+  // Diğer diller: dictionaryapi.dev'den çek ve Supabase'e kaydet
+  try {
+    const raw = await fetchURL(`https://api.dictionaryapi.dev/api/v2/entries/${lang}/${encodeURIComponent(rawWord)}`);
+    const entries = JSON.parse(raw);
+    const meanings = [];
+    if (Array.isArray(entries)) {
+      for (const entry of entries) {
+        for (const m of (entry.meanings || [])) {
+          const pos = m.partOfSpeech;
+          for (const def of (m.definitions || []).slice(0, 2)) {
+            meanings.push(`(${pos}) ${def.definition}`);
             if (meanings.length >= 5) break;
           }
           if (meanings.length >= 5) break;
         }
+        if (meanings.length >= 5) break;
       }
-      const result = meanings.length > 0 ? { word, meanings } : null;
-      _meaningCache.set(cacheKey, result);
-      return res.json(result);
-    } catch {
-      return res.json(null);
     }
+    if (meanings.length > 0) {
+      const result = { word: rawWord, meanings };
+      _meaningCache.set(cacheKey, result);
+      // Arka planda Supabase'e kaydet (bir sonraki sorguda DB'den gelsin)
+      supabase.from('word_meanings').upsert({ word: dbKey, meanings }).catch(() => {});
+      return res.json(result);
+    }
+    _meaningCache.set(cacheKey, null);
+    return res.json(null);
+  } catch {
+    return res.json(null);
   }
-
-  const word = req.params.word.toLocaleLowerCase('tr-TR');
-  if (_meaningCache.has(word)) return res.json(_meaningCache.get(word));
-  const { data } = await supabase
-    .from('word_meanings')
-    .select('meanings')
-    .eq('word', word)
-    .maybeSingle();
-  const result = data ? { word, meanings: data.meanings } : null;
-  _meaningCache.set(word, result);
-  res.json(result);
 });
 
 // ─── İtiraz API: listele ──────────────────────────────────────
@@ -865,20 +889,7 @@ app.post('/api/disputes', async (req, res) => {
   if (error) return res.json({ ok: false, error: 'Kayıt hatası.' });
   res.json({ ok: true, id });
 
-  // TDK kontrolü arka planda — yanıt zaten gönderildi
-  checkTDK(normalized).then(async inTDK => {
-    if (!inTDK) return;
-    await supabase.from('disputes')
-      .update({ status: 'approved', resolved_at: new Date().toISOString() })
-      .eq('id', id);
-    const dictData = readWords();
-    if (!dictData.words.includes(normalized)) {
-      dictData.words.push(normalized);
-      writeWords(dictData);
-      _wordSet.add(normalized);
-    }
-    console.log(`[TDK] "${normalized}" otomatik onaylandı.`);
-  }).catch(err => console.error('[TDK]', err));
+  // Otomatik onay kaldırıldı — admin panelinden manuel onay gerekir
 });
 
 // ─── İtiraz API: onayla / reddet ─────────────────────────────
@@ -1155,7 +1166,7 @@ app.get('/api/group/open', requireAuth, (req, res) => {
   const open = [];
   for (const [code, room] of groupRooms) {
     if (room.joinMode === 'open' && room.status === 'lobby') {
-      open.push({ code, hostName: room.host.displayName, playerCount: room.players.length });
+      open.push({ code, hostName: room.host.displayName, playerCount: room.players.length, lang: room.lang || 'tr' });
     }
   }
   res.json(open);
@@ -1706,7 +1717,7 @@ io.on('connection', socket => {
     socketGroupRoom.set(socket.id, code);
     userGroupRoom.set(String(user.id), code);
     socket.join(`grp_${code}`);
-    socket.emit('grp_approved', { code, hostName: room.host.displayName });
+    socket.emit('grp_approved', { code, hostName: room.host.displayName, lang: room.lang });
     io.to(`grp_${code}`).emit('grp_players_update', {
       players: room.players.map(p => ({ displayName: p.displayName, userId: p.userId }))
     });
@@ -1737,7 +1748,7 @@ io.on('connection', socket => {
       socketGroupRoom.set(player.socket.id, code);
       userGroupRoom.set(String(player.userId), code);
       player.socket.join(`grp_${code}`);
-      player.socket.emit('grp_approved', { code, hostName: room.host.displayName });
+      player.socket.emit('grp_approved', { code, hostName: room.host.displayName, lang: room.lang });
       io.to(`grp_${code}`).emit('grp_players_update', {
         players: room.players.map(p => ({ displayName: p.displayName, userId: p.userId }))
       });
