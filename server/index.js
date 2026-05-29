@@ -804,6 +804,22 @@ app.delete('/api/admin/blacklist/:word', requireAdmin, (req, res) => {
 
 // ─── Anlam API ────────────────────────────────────────────────
 
+// dictionaryapi.dev dil kodu eşleştirmesi (pt-BR gibi farklar için)
+const DICT_API_LANG = { en: 'en', de: 'de', es: 'es', fr: 'fr', pt: 'pt-BR', it: 'it' };
+
+function fetchURL(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, { headers: { 'User-Agent': 'Verbum9/1.0' } }, res => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve(data);
+        else reject(new Error(`HTTP ${res.statusCode}`));
+      });
+    }).on('error', reject);
+  });
+}
+
 app.get('/api/meaning/:word', async (req, res) => {
   const lang = req.query.lang || 'tr';
   const cfg = _langConfig[lang] || _langConfig['tr'];
@@ -835,7 +851,8 @@ app.get('/api/meaning/:word', async (req, res) => {
 
   // Diğer diller: dictionaryapi.dev'den çek ve Supabase'e kaydet
   try {
-    const raw = await fetchURL(`https://api.dictionaryapi.dev/api/v2/entries/${lang}/${encodeURIComponent(rawWord)}`);
+    const apiLang = DICT_API_LANG[lang] || lang;
+    const raw = await fetchURL(`https://api.dictionaryapi.dev/api/v2/entries/${apiLang}/${encodeURIComponent(rawWord)}`);
     const entries = JSON.parse(raw);
     const meanings = [];
     if (Array.isArray(entries)) {

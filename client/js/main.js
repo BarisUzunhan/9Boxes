@@ -1649,8 +1649,9 @@ function openProfile() {
   document.getElementById('profile-username-display').textContent = currentUser.username;
   document.getElementById('profile-email-display').textContent = currentUser.email || '';
   const _pd = currentUser.createdAt ? new Date(currentUser.createdAt) : null;
+  const _locale = getActiveLangConfig().locale;
   document.getElementById('profile-date-display').textContent = _pd
-    ? `Kayıt: ${_pd.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}`
+    ? t('profile.joined', { date: _pd.toLocaleDateString(_locale, { day: 'numeric', month: 'long', year: 'numeric' }) })
     : '';
   document.getElementById('profile-level-value').textContent = currentUser.level;
   document.getElementById('profile-score').textContent = currentUser.totalScore;
@@ -1724,19 +1725,19 @@ function openFriends() {
 }
 
 function formatLastSeen(lastSeen, online) {
-  if (online) return '<span class="friend-online-status">● Çevrimiçi</span>';
-  if (!lastSeen) return '<span class="friend-status">○ Hiç görülmedi</span>';
+  if (online) return `<span class="friend-online-status">${t('friends.online')}</span>`;
+  if (!lastSeen) return `<span class="friend-status">${t('friends.never_seen')}</span>`;
   const diff = Date.now() - new Date(lastSeen).getTime();
   const mins  = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days  = Math.floor(diff / 86400000);
   let label;
-  if (mins < 1)       label = 'az önce çevrimdışı';
-  else if (mins < 60) label = `${mins} dk önce görüldü`;
-  else if (hours < 24) label = `${hours} saat önce görüldü`;
-  else if (days < 30) label = `${days} gün önce görüldü`;
-  else                label = 'uzun süredir çevrimdışı';
-  return `<span class="friend-status">○ ${label}</span>`;
+  if (mins < 1)        label = t('friends.just_offline');
+  else if (mins < 60)  label = `○ ${t('friends.mins_ago',  { n: mins })}`;
+  else if (hours < 24) label = `○ ${t('friends.hours_ago', { n: hours })}`;
+  else if (days < 30)  label = `○ ${t('friends.days_ago',  { n: days })}`;
+  else                 label = t('friends.long_ago');
+  return `<span class="friend-status">${label}</span>`;
 }
 
 async function loadFriends() {
@@ -1747,7 +1748,7 @@ async function loadFriends() {
   badge.textContent = friends.length || '';
   badge.hidden = friends.length === 0;
   if (friends.length === 0) {
-    list.innerHTML = '<div class="friends-empty">Henüz arkadaşın yok. Yukarıdan ara!</div>';
+    list.innerHTML = `<div class="friends-empty">${t('friends.empty')}</div>`;
     return;
   }
   list.innerHTML = friends.map(f => `
@@ -1755,7 +1756,7 @@ async function loadFriends() {
       <div class="friend-avatar">${f.username[0].toLocaleUpperCase('tr-TR')}${f.online ? '<div class="online-dot"></div>' : ''}</div>
       <div class="friend-name">${f.username}<br>${formatLastSeen(f.lastSeen, f.online)}</div>
       <div class="friend-actions">
-        <button class="btn-friend-invite" ${!f.online ? 'disabled' : ''} onclick="inviteFriend(${f.userId}, '${f.username}')">⚡ Davet</button>
+        <button class="btn-friend-invite" ${!f.online ? 'disabled' : ''} onclick="inviteFriend(${f.userId}, '${f.username}')">${t('friends.invite_action')}</button>
         <button class="btn-friend-remove" onclick="removeFriend(${f.friendshipId})">✕</button>
       </div>
     </div>`).join('');
@@ -1775,8 +1776,8 @@ async function loadFriendRequests() {
       <div class="friend-avatar">${r.username[0].toLocaleUpperCase('tr-TR')}</div>
       <div class="friend-name">${r.username}</div>
       <div class="friend-actions">
-        <button class="btn-friend-accept" onclick="respondRequest(${r.id}, true)">✓ Kabul</button>
-        <button class="btn-friend-reject" onclick="respondRequest(${r.id}, false)">✕ Reddet</button>
+        <button class="btn-friend-accept" onclick="respondRequest(${r.id}, true)">${t('friends.accept')}</button>
+        <button class="btn-friend-reject" onclick="respondRequest(${r.id}, false)">${t('friends.reject')}</button>
       </div>
     </div>`).join('');
 }
@@ -1788,13 +1789,13 @@ async function searchFriends() {
   const results = await res.json();
   const section = document.getElementById('friends-search-results');
   section.hidden = false;
-  if (results.length === 0) { section.innerHTML = '<div class="friends-section-title">Arama Sonucu</div><div class="friends-empty">Kullanıcı bulunamadı.</div>'; return; }
-  section.innerHTML = '<div class="friends-section-title">Arama Sonucu</div>' + results.map(u => {
+  if (results.length === 0) { section.innerHTML = `<div class="friends-section-title">${t('friends.search_result')}</div><div class="friends-empty">${t('friends.not_found')}</div>`; return; }
+  section.innerHTML = `<div class="friends-section-title">${t('friends.search_result')}</div>` + results.map(u => {
     let actionBtn = '';
-    if (u.friendStatus === 'friends') actionBtn = '<button class="btn-friend-pending" disabled>Arkadaş ✓</button>';
-    else if (u.friendStatus === 'sent') actionBtn = '<button class="btn-friend-pending" disabled>İstek Gönderildi</button>';
-    else if (u.friendStatus === 'received') actionBtn = `<button class="btn-friend-accept" onclick="respondRequest(${u.friendshipId}, true)">✓ Kabul</button>`;
-    else actionBtn = `<button class="btn-friend-invite" onclick="sendFriendRequest('${u.username}', this)">+ İstek Gönder</button>`;
+    if (u.friendStatus === 'friends') actionBtn = `<button class="btn-friend-pending" disabled>${t('friends.is_friend')}</button>`;
+    else if (u.friendStatus === 'sent') actionBtn = `<button class="btn-friend-pending" disabled>${t('friends.request_sent')}</button>`;
+    else if (u.friendStatus === 'received') actionBtn = `<button class="btn-friend-accept" onclick="respondRequest(${u.friendshipId}, true)">${t('friends.accept')}</button>`;
+    else actionBtn = `<button class="btn-friend-invite" onclick="sendFriendRequest('${u.username}', this)">${t('friends.add')}</button>`;
     return `<div class="friend-row"><div class="friend-avatar">${u.username[0].toLocaleUpperCase('tr-TR')}</div><div class="friend-name">${u.username}</div><div class="friend-actions">${actionBtn}</div></div>`;
   }).join('');
 }
@@ -1806,8 +1807,8 @@ async function sendFriendRequest(username, btn) {
     body: JSON.stringify({ username })
   });
   const d = await res.json();
-  if (d.ok) { btn.textContent = 'İstek Gönderildi'; btn.className = 'btn-friend-pending'; }
-  else { btn.disabled = false; btn.textContent = '+ İstek Gönder'; showToast(d.error || 'Hata.'); }
+  if (d.ok) { btn.textContent = t('friends.request_sent'); btn.className = 'btn-friend-pending'; }
+  else { btn.disabled = false; btn.textContent = t('friends.add'); showToast(d.error || 'Hata.'); }
 }
 
 async function respondRequest(id, accept) {
