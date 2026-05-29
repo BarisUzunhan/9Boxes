@@ -18,7 +18,7 @@ const https = require('https');
 
 const APP_URL = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
 
-async function sendVerificationEmail(to, token) {
+async function sendVerificationEmail(to, token, username = '') {
   const link = `${APP_URL}/verify-email?token=${token}`;
   const body = JSON.stringify({
     sender:      { name: 'Verbum9', email: process.env.BREVO_SENDER_EMAIL || to },
@@ -29,9 +29,10 @@ async function sendVerificationEmail(to, token) {
         <h1 style="margin:0 0 24px;letter-spacing:-1px">
           <span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span>
         </h1>
-        <p style="font-size:1rem;margin:0 0 8px">Merhaba!</p>
+        <p style="font-size:1rem;margin:0 0 8px">Merhaba <strong>${username}</strong>!</p>
         <p style="color:#8892b0;line-height:1.6;margin:0 0 24px">
-          Hesabını aktifleştirmek için aşağıdaki butona bas. Link 24 saat geçerlidir.
+          <strong style="color:#4cc9f0">${username}</strong> kullanıcı adıyla Verbum9'a kaydoldun.<br><br>
+          Hesabını aktifleştirmek için aşağıdaki butona bas. Link <strong style="color:#fff">24 saat</strong> geçerlidir.
         </p>
         <a href="${link}"
            style="display:inline-block;padding:14px 28px;background:#e94560;color:#fff;
@@ -251,8 +252,11 @@ function resetPasswordPage(token) {
   </body></html>`;
 }
 
-function verifyPage(msg, success) {
+function verifyPage(msg, success, username = '') {
   const color = success ? '#06d6a0' : '#ef233c';
+  const usernameHtml = success && username
+    ? `<p style="color:#8892b0;margin-bottom:24px">Kullanıcı adın: <strong style="color:#fff">${username}</strong></p>`
+    : '';
   return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Verbum9</title>
@@ -269,7 +273,8 @@ function verifyPage(msg, success) {
   </head><body><div class="card">
     <h1><span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span></h1>
     <div class="icon">${success ? '✅' : '❌'}</div>
-    <p style="color:${color};font-weight:600;font-size:1.1rem">${msg}</p>
+    <p style="color:${color};font-weight:600;font-size:1.1rem;margin-bottom:16px">${msg}</p>
+    ${usernameHtml}
     <a href="/">Oyuna Git →</a>
   </div></body></html>`;
 }
@@ -952,7 +957,7 @@ app.post('/api/auth/register', async (req, res) => {
     await userService.createUser(user);
 
     try {
-      await sendVerificationEmail(user.email, verificationToken);
+      await sendVerificationEmail(user.email, verificationToken, user.username);
     } catch (mailErr) {
       console.error('[register] mail gönderilemedi:', mailErr);
     }
@@ -996,7 +1001,7 @@ app.get('/verify-email', async (req, res) => {
   const user = await userService.getUserByVerificationToken(token);
   if (!user) return res.send(verifyPage('Bu link geçersiz veya daha önce kullanılmış.', false));
   await userService.verifyEmail(token);
-  res.send(verifyPage('E-posta doğrulandı! Artık giriş yapabilirsin.', true));
+  res.send(verifyPage('E-posta doğrulandı! Artık giriş yapabilirsin.', true, user.username));
 });
 
 app.post('/api/auth/resend-verification', async (req, res) => {
@@ -1006,7 +1011,7 @@ app.post('/api/auth/resend-verification', async (req, res) => {
     if (!user || user.emailVerified) return res.json({ ok: false });
     const newToken = crypto.randomBytes(32).toString('hex');
     await userService.setVerificationToken(user.id, newToken);
-    await sendVerificationEmail(user.email, newToken);
+    await sendVerificationEmail(user.email, newToken, user.username);
     res.json({ ok: true });
   } catch (err) {
     console.error('[resend-verification]', err);
