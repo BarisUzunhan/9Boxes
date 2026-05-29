@@ -1,4 +1,5 @@
-import { loadDictionary, getWordArray } from './dictionary.js';
+import { loadDictionary, getWordArray, switchDictionary } from './dictionary.js';
+import { t, applyLang, setI18nLang } from './i18n.js';
 import { init as initTutorial, startLobby, startFill, startGame as startGameTutorial, startResult, showLobbyTutorial, onEnd as onTutorialEnd } from './tutorial.js';
 import {
   state, PHASES,
@@ -104,6 +105,8 @@ function loadSettings() {
   document.getElementById('btn-theme-dark').classList.toggle('active', theme !== 'light');
   document.getElementById('btn-theme-light').classList.toggle('active', theme === 'light');
 
+  applyLang(localStorage.getItem('verbum_lang') || 'tr');
+
   const color = localStorage.getItem('verbum9_color') || 'default';
   applyColorTheme(color);
   document.querySelectorAll('[data-color]').forEach(b => {
@@ -132,7 +135,10 @@ function initLangPicker() {
   }
   modal.querySelectorAll('.lang-picker-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      setActiveLang(btn.dataset.lang);
+      const lang = btn.dataset.lang;
+      setActiveLang(lang);
+      applyLang(lang);
+      switchDictionary(lang);
       modal.hidden = true;
     });
   });
@@ -152,7 +158,7 @@ function _displayHintInline(pattern) {
   // Feedback alanında ipucu mesajı göster
   const fb = document.getElementById('word-feedback');
   fb.className = 'word-feedback hint-info';
-  fb.textContent = `💡 ${pattern.length} harfli bir kelime`;
+  fb.textContent = t('word.hint_label', { len: pattern.length });
   document.getElementById('btn-submit').disabled = true;
 }
 
@@ -162,7 +168,7 @@ function bindHintEvents() {
 
     if (mode === 'solo' || mode === 'group' || mode === 'daily') {
       const missed = findMissedWords();
-      if (missed.length === 0) { showToast('Başka kelime bulunamadı!', 3000); return; }
+      if (missed.length === 0) { showToast(t('toast.no_hint'), 3000); return; }
       const word = missed[Math.floor(Math.random() * Math.min(missed.length, 30))];
       const wordU = word.toLocaleUpperCase('tr-TR');
       const positions = [...Array(wordU.length).keys()].sort(() => Math.random() - 0.5);
@@ -319,8 +325,11 @@ function bindSettingsEvents() {
   // Dil
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      setActiveLang(btn.dataset.lang);
-      document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === btn.dataset.lang));
+      const lang = btn.dataset.lang;
+      setActiveLang(lang);
+      applyLang(lang);
+      switchDictionary(lang);
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
     });
   });
 
@@ -387,7 +396,7 @@ function endDemoGame() {
 // ─── Başlatma ────────────────────────────────────────────────
 
 async function init() {
-  await loadDictionary();
+  await loadDictionary(localStorage.getItem('verbum_lang') || 'tr');
   loadSettings();
   bindAuth();
   bindLobbyEvents();
@@ -709,7 +718,7 @@ function goToOnline() {
   mode = 'multi';
   mp.myScore = 0;
   socket.auth = { token: localStorage.getItem(TOKEN_KEY) };
-  document.getElementById('waiting-status').textContent = 'Rakip aranıyor...';
+  document.getElementById('waiting-status').textContent = t('waiting.searching');
   showScreen('screen-waiting');
   if (socket.connected) {
     socket.emit('join_queue', { name: currentUser.username, lang: getActiveLang() });
@@ -738,7 +747,7 @@ socket.on('connect', () => {
 });
 
 socket.on('queued', () => {
-  document.getElementById('waiting-status').textContent = 'Sırada bekleniyor...';
+  document.getElementById('waiting-status').textContent = t('waiting.queued');
 });
 
 socket.on('matched', ({ opponentName, playerIndex, turnIndex, lang }) => {
@@ -922,7 +931,7 @@ socket.on('opponent_left', () => {
   removeGameEvents();
   releaseWakeLock();
   state.phase = PHASES.RESULT;
-  document.getElementById('multi-result-header').textContent = `${mp.opponentName} bağlantıyı kesti — sen kazandın!`;
+  document.getElementById('multi-result-header').textContent = t('result.opp_disconnected', { name: mp.opponentName });
   document.getElementById('multi-result-header').className = 'multi-result-header win';
   document.getElementById('multi-result').hidden = false;
   document.getElementById('result-words-section').hidden = true;
@@ -933,11 +942,11 @@ socket.on('opponent_left', () => {
 });
 
 socket.on('opponent_disconnected', ({ timeLeft }) => {
-  showToast(`${mp.opponentName} bağlantısı kesildi. Oynamaya devam et — süre bitince sonuç açıklanır.`, Math.min(timeLeft * 1000, 8000));
+  showToast(t('toast.opp_disconnected', { name: mp.opponentName }), Math.min(timeLeft * 1000, 8000));
 });
 
 socket.on('opponent_reconnected', () => {
-  showToast(`${mp.opponentName} geri döndü!`, 3000);
+  showToast(t('toast.opp_reconnected', { name: mp.opponentName }), 3000);
 });
 
 socket.on('hint_result', async ({ ok, pattern, error }) => {
@@ -1027,7 +1036,7 @@ function _findMissedForMatrix(matrix, foundSet) {
 function updateFillTurnBanner() {
   const banner = document.getElementById('fill-turn-banner');
   const myTurn = mp.turnIndex === mp.playerIndex;
-  banner.textContent = myTurn ? '⬤ Senin sıran — bir hücre seç ve harf gir' : `⬤ ${mp.opponentName} seçiyor...`;
+  banner.textContent = myTurn ? t('fill.my_turn') : t('fill.opponent_turn', { name: mp.opponentName });
   banner.className = 'fill-turn-banner ' + (myTurn ? 'my-turn' : 'opponent-turn');
 }
 
@@ -1116,13 +1125,13 @@ function renderResultMulti(players, missedWords = []) {
   // Kazanan başlık
   const header = document.getElementById('multi-result-header');
   if (my.score > op.score) {
-    header.textContent = `Kazandın! ${my.score} — ${op.score}`;
+    header.textContent = t('result.win', { my: my.score, op: op.score });
     header.className = 'multi-result-header win';
   } else if (op.score > my.score) {
-    header.textContent = `Kaybettin. ${my.score} — ${op.score}`;
+    header.textContent = t('result.lose', { my: my.score, op: op.score });
     header.className = 'multi-result-header lose';
   } else {
-    header.textContent = `Berabere! ${my.score} — ${op.score}`;
+    header.textContent = t('result.draw', { my: my.score, op: op.score });
     header.className = 'multi-result-header draw';
   }
 
@@ -1203,7 +1212,7 @@ function renderResultMulti(players, missedWords = []) {
     const li = document.createElement('li');
     li.className = 'valid';
     li.style.opacity = '0.5';
-    li.textContent = 'Tüm kelimeler bulundu!';
+    li.textContent = t('result.all_found');
     missedList.appendChild(li);
   }
 
@@ -1267,6 +1276,8 @@ function onFillKeydown(e) {
 }
 
 function normalizeLetter(key) {
+  const lang = getActiveLang();
+  if (lang !== 'tr') return key.toLocaleUpperCase('en-US');
   const map = { i: 'İ', ı: 'I' };
   return map[key] || key.toLocaleUpperCase('tr-TR');
 }
@@ -1601,19 +1612,21 @@ async function showMeaning(word) {
   const wordEl = document.getElementById('meaning-word');
   const bodyEl = document.getElementById('meaning-body');
   wordEl.textContent = word;
-  bodyEl.innerHTML = '<div class="no-meaning">Yükleniyor...</div>';
+  bodyEl.innerHTML = `<div class="no-meaning">${t('toast.loading')}</div>`;
   popup.hidden = false;
 
+  const lang = getActiveLang();
+  const locale = getActiveLangConfig().locale;
   try {
-    const res = await fetch(`/api/meaning/${encodeURIComponent(word.toLocaleLowerCase('tr-TR'))}`);
+    const res = await fetch(`/api/meaning/${encodeURIComponent(word.toLocaleLowerCase(locale))}?lang=${lang}`);
     const data = await res.json();
     if (data && data.meanings && data.meanings.length > 0) {
       bodyEl.innerHTML = '<ol>' + data.meanings.map(m => `<li>${m}</li>`).join('') + '</ol>';
     } else {
-      bodyEl.innerHTML = '<div class="no-meaning">Tanım bulunamadı.</div>';
+      bodyEl.innerHTML = `<div class="no-meaning">${t('toast.no_meaning')}</div>`;
     }
   } catch {
-    bodyEl.innerHTML = '<div class="no-meaning">Anlam yüklenemedi.</div>';
+    bodyEl.innerHTML = `<div class="no-meaning">${t('toast.meaning_error')}</div>`;
   }
 }
 

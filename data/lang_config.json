@@ -11,7 +11,7 @@
   "en": {
     "name": "English",
     "locale": "en-US",
-    "minLength": 3,
+    "minLength": 2,
     "vowels": ["A","E","I","O","U"],
     "letterPool": "EEEEEEEEEEEEEAAAAAAAAOOOOOOOOTTTTTTTTTIIIIIIIINNNNNNNSSSSSSHHHHHHRRRRRRDDDDDLLLLLLCCCUUUMMMWWWFFGGYYPBBVK",
     "wordsFile": "words_en.json",

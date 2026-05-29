@@ -2,23 +2,35 @@ let wordSet = new Set();
 let homophoneSet = new Set();
 let blacklistSet = new Set();
 let wordArray = [];
+let _locale = 'tr-TR';
 
-export async function loadDictionary() {
-  const res = await fetch('/data/words.json');
+export async function loadDictionary(lang = 'tr') {
+  await _loadForLang(lang);
+}
+
+export async function switchDictionary(lang) {
+  await _loadForLang(lang);
+}
+
+async function _loadForLang(lang) {
+  const file = lang === 'tr' ? '/data/words.json' : `/data/words_${lang}.json`;
+  const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
+  _locale = locale;
+  const res = await fetch(file);
   const data = await res.json();
   wordArray = data.words;
-  wordSet      = new Set(wordArray.map(w => w.toLocaleLowerCase('tr-TR')));
-  homophoneSet = new Set((data.homophones || []).map(w => w.toLocaleLowerCase('tr-TR')));
-  blacklistSet = new Set((data.blacklist  || []).map(w => w.toLocaleLowerCase('tr-TR')));
+  wordSet      = new Set(wordArray.map(w => w.toLocaleLowerCase(locale)));
+  homophoneSet = new Set((data.homophones || []).map(w => w.toLocaleLowerCase(locale)));
+  blacklistSet = new Set((data.blacklist  || []).map(w => w.toLocaleLowerCase(locale)));
 }
 
 export function isValidWord(word) {
-  const w = word.toLocaleLowerCase('tr-TR');
+  const w = word.toLocaleLowerCase(_locale);
   return wordSet.has(w) && !blacklistSet.has(w);
 }
 
 export function isHomophone(word) {
-  return homophoneSet.has(word.toLocaleLowerCase('tr-TR'));
+  return homophoneSet.has(word.toLocaleLowerCase(_locale));
 }
 
 export function getWordArray() {

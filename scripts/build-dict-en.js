@@ -12,7 +12,7 @@ const path  = require('path');
 
 const SOURCE_URL  = 'https://raw.githubusercontent.com/dolph/dictionary/master/enable1.txt';
 const OUTPUT_PATH = path.join(__dirname, '../data/words_en.json');
-const MIN_LEN = 3;
+const MIN_LEN = 2;
 const MAX_LEN = 9;
 
 // ─── Düzensiz fiil çekimleri — SADECE suffix kuralının yakalayamadığı formlar ──

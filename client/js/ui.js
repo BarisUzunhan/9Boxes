@@ -1,4 +1,5 @@
-import { state, formatTime, matrixComplete } from './game.js';
+import { state, formatTime, matrixComplete, getActiveLangConfig } from './game.js';
+import { t } from './i18n.js';
 
 // ─── Ekran geçişi ────────────────────────────────────────────
 
@@ -94,19 +95,20 @@ export function updateWordDisplay() {
     container.appendChild(box);
   });
 
-  document.getElementById('btn-submit').disabled = state.currentWordCells.length < 2;
+  document.getElementById('btn-submit').disabled = state.currentWordCells.length < getActiveLangConfig().minLength;
   clearWordFeedback();
 }
 
 export function showWordFeedback(status, word = '', points = 0) {
   const el = document.getElementById('word-feedback');
   el.className = 'word-feedback ' + status;
+  const min = getActiveLangConfig().minLength;
 
   const messages = {
-    valid: `✓ ${word} (+${points})`,
-    invalid: `✗ ${word} — sözlükte yok`,
-    duplicate: `${word} zaten yazıldı`,
-    short: 'En az 2 harf gerekli',
+    valid:     t('word.valid',     { word, pts: points }),
+    invalid:   t('word.invalid',   { word }),
+    duplicate: t('word.duplicate', { word }),
+    short:     t('word.short',     { min }),
   };
   el.textContent = messages[status] || '';
 

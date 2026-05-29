@@ -116,38 +116,38 @@
       <div class="lobby-stats-bar">
         <div class="lobby-stat-chip">
           <span class="chip-val" id="lobby-stat-level">1</span>
-          <span class="chip-lbl">Seviye</span>
+          <span class="chip-lbl" data-i18n="lobby.stat.level">Seviye</span>
         </div>
         <div class="lobby-stat-chip">
           <span class="chip-val" id="lobby-stat-score">0</span>
-          <span class="chip-lbl">Puan</span>
+          <span class="chip-lbl" data-i18n="lobby.stat.score">Puan</span>
         </div>
         <div class="lobby-stat-chip">
           <span class="chip-val" id="lobby-stat-kl">0</span>
           <span class="chip-lbl">KL</span>
         </div>
       </div>
-      <p class="lobby-tagline">Türkçe Kelime Yarışı</p>
+      <p class="lobby-tagline" data-i18n="lobby.tagline">Türkçe Kelime Yarışı</p>
       <div class="mode-grid">
         <div class="mode-card" id="mode-solo">
           <div class="mode-icon">🎮</div>
-          <div class="mode-title">Tek Oyunculu</div>
-          <div class="mode-desc">Harfleri seç, kelimeleri bul</div>
+          <div class="mode-title" data-i18n="lobby.solo.title">Tek Oyunculu</div>
+          <div class="mode-desc" data-i18n="lobby.solo.desc">Harfleri seç, kelimeleri bul</div>
         </div>
         <div class="mode-card" id="mode-1v1">
           <div class="mode-icon">⚡</div>
           <div class="mode-title">1v1 Online</div>
-          <div class="mode-desc">Rakiple gerçek zamanlı yar</div>
+          <div class="mode-desc" data-i18n="lobby.1v1.desc">Rakiple gerçek zamanlı yar</div>
         </div>
         <div class="mode-card" id="mode-daily">
           <div class="mode-icon">📅</div>
-          <div class="mode-title">Günlük Oyun</div>
-          <div class="mode-desc">Herkesle aynı harfler</div>
+          <div class="mode-title" data-i18n="lobby.daily.title">Günlük Oyun</div>
+          <div class="mode-desc" data-i18n="lobby.daily.desc">Herkesle aynı harfler</div>
         </div>
         <div class="mode-card" id="mode-multi">
           <div class="mode-icon">👥</div>
-          <div class="mode-title">Çoklu Mod</div>
-          <div class="mode-desc">3-8 oyuncu, aynı harfler</div>
+          <div class="mode-title" data-i18n="lobby.multi.title">Çoklu Mod</div>
+          <div class="mode-desc" data-i18n="lobby.multi.desc">3-8 oyuncu, aynı harfler</div>
         </div>
       </div>
     </div>
@@ -158,7 +158,7 @@
     <div class="waiting-content">
       <div class="waiting-spinner"></div>
       <p id="waiting-status" class="waiting-status">Rakip aranıyor...</p>
-      <button id="btn-cancel-queue" class="btn-secondary">Vazgeç</button>
+      <button id="btn-cancel-queue" class="btn-secondary" data-i18n="waiting.cancel">Vazgeç</button>
     </div>
   </div>
 
@@ -174,17 +174,17 @@
     <div class="fill-body">
       <div id="fill-turn-banner" class="fill-turn-banner" hidden></div>
       <div class="fill-header">
-        <h2>Harfleri Seç</h2>
-        <p id="fill-hint" class="fill-hint">Klavyeyle yaz veya hücreye tıkla.</p>
+        <h2 data-i18n="fill.title">Harfleri Seç</h2>
+        <p id="fill-hint" class="fill-hint" data-i18n="fill.hint">Klavyeyle yaz veya hücreye tıkla.</p>
       </div>
       <div id="fill-matrix" class="matrix-grid fill-mode">
         <!-- 9 hücre JS tarafından doldurulur -->
       </div>
       <div class="fill-actions">
-        <button id="btn-random-one" class="btn-secondary">🎲 Bu Hücreyi</button>
-        <button id="btn-random-all" class="btn-secondary">🎲 Tümünü</button>
+        <button id="btn-random-one" class="btn-secondary" data-i18n="fill.random_one">🎲 Bu Hücreyi</button>
+        <button id="btn-random-all" class="btn-secondary" data-i18n="fill.random_all">🎲 Tümünü</button>
         <button id="btn-fill-keyboard" class="btn-secondary btn-keyboard">⌨</button>
-        <button id="btn-start-game" class="btn-primary" disabled>Başla →</button>
+        <button id="btn-start-game" class="btn-primary" disabled data-i18n="fill.start">Başla →</button>
       </div>
     </div>
     <input id="fill-keyboard-input" type="text" inputmode="text"
@@ -197,17 +197,17 @@
     <!-- Geri sayım overlay -->
     <div id="countdown-overlay" class="countdown-overlay" hidden>
       <div id="countdown-number" class="countdown-number">5</div>
-      <p class="countdown-label">Hazır ol!</p>
+      <p class="countdown-label" data-i18n="game.ready">Hazır ol!</p>
     </div>
     <div class="game-header">
       <button id="btn-exit-game" class="btn-nav-home">Ana Sayfa</button>
       <div id="game-score" class="game-stat">
-        <span class="stat-label">PUAN</span>
+        <span class="stat-label" data-i18n="game.score_label">PUAN</span>
         <span id="score-value" class="stat-value">0</span>
       </div>
       <div id="game-timer" class="game-timer">3:00</div>
       <div id="game-words-count" class="game-stat">
-        <span class="stat-label">KELİME</span>
+        <span class="stat-label" data-i18n="game.words_label">KELİME</span>
         <span id="words-count-value" class="stat-value">0</span>
       </div>
       <div class="nav-user-group">
@@ -238,12 +238,12 @@
             aria-hidden="true" tabindex="-1">
         </div>
 
-        <button id="btn-toggle-words" class="btn-toggle-words">📝 Kelimelerim</button>
+        <button id="btn-toggle-words" class="btn-toggle-words" data-i18n="game.my_words">📝 Kelimelerim</button>
       </div>
 
       <div id="words-panel" class="words-panel">
         <div class="words-panel-header">
-          <h3>Kelimelerim</h3>
+          <h3 data-i18n="game.my_words_panel">Kelimelerim</h3>
           <button id="btn-close-words" class="btn-close-panel">✕</button>
         </div>
         <ul id="words-list" class="words-list"></ul>
@@ -254,13 +254,13 @@
   <!-- EKRAN: Sonuç -->
   <div id="screen-result" class="screen">
     <div class="result-content">
-      <h2>Oyun Bitti!</h2>
+      <h2 data-i18n="result.title">Oyun Bitti!</h2>
       <div class="result-score">
         <div class="result-score-number" id="result-score-number">0</div>
-        <div class="result-score-label">puan</div>
+        <div class="result-score-label" data-i18n="result.score_label">puan</div>
       </div>
       <div class="result-words-section" id="result-words-section">
-        <h3>Bulduğun Kelimeler</h3>
+        <h3 data-i18n="result.found">Bulduğun Kelimeler</h3>
         <ul id="result-words-list" class="words-list result-mode"></ul>
       </div>
 
@@ -281,7 +281,7 @@
 
       <div class="result-words-section" id="result-missed-section" hidden>
         <div class="result-section-header">
-          <h3>Kaçırdığın Kelimeler</h3>
+          <h3 data-i18n="result.missed">Kaçırdığın Kelimeler</h3>
           <span id="result-missed-count" class="missed-count"></span>
         </div>
         <ul id="result-missed-list" class="words-list result-mode missed-mode"></ul>
@@ -297,8 +297,8 @@
       </div>
 
       <div class="result-actions">
-        <button id="btn-again" class="btn-primary">Tekrar Oyna</button>
-        <button id="btn-to-lobby" class="btn-secondary">Ana Menü</button>
+        <button id="btn-again" class="btn-primary" data-i18n="result.play_again">Tekrar Oyna</button>
+        <button id="btn-to-lobby" class="btn-secondary" data-i18n="result.main_menu">Ana Menü</button>
       </div>
     </div>
   </div>
@@ -452,7 +452,7 @@
     <div class="exit-confirm-content">
       <p class="exit-confirm-text" id="vowel-popup-text">Sesli harf eklendi.</p>
       <div class="exit-confirm-actions">
-        <button id="btn-vowel-ok" class="btn-primary">Tamam</button>
+        <button id="btn-vowel-ok" class="btn-primary" data-i18n="vowel.ok">Tamam</button>
       </div>
     </div>
   </div>
@@ -461,10 +461,10 @@
   <div id="extension-popup" class="exit-confirm" hidden>
     <div class="exit-confirm-backdrop"></div>
     <div class="exit-confirm-content">
-      <p class="exit-confirm-text" id="extension-popup-text">Rakibiniz oyunu 30 saniye uzatmak istiyor.</p>
+      <p class="exit-confirm-text" id="extension-popup-text" data-i18n="extension.request">Rakibiniz oyunu 30 saniye uzatmak istiyor.</p>
       <div class="exit-confirm-actions">
-        <button id="btn-extension-yes" class="btn-primary">Kabul Et</button>
-        <button id="btn-extension-no" class="btn-secondary">Reddet</button>
+        <button id="btn-extension-yes" class="btn-primary" data-i18n="extension.accept">Kabul Et</button>
+        <button id="btn-extension-no" class="btn-secondary" data-i18n="extension.reject">Reddet</button>
       </div>
     </div>
   </div>
@@ -473,10 +473,10 @@
   <div id="exit-confirm" class="exit-confirm" hidden>
     <div class="exit-confirm-backdrop" id="exit-confirm-backdrop"></div>
     <div class="exit-confirm-content">
-      <p class="exit-confirm-text">Çıkmak istediğinizden emin misiniz?</p>
+      <p class="exit-confirm-text" data-i18n="exit.confirm">Çıkmak istediğinizden emin misiniz?</p>
       <div class="exit-confirm-actions">
-        <button id="btn-exit-yes" class="btn-secondary">Çık</button>
-        <button id="btn-exit-no" class="btn-primary">Devam Et</button>
+        <button id="btn-exit-yes" class="btn-secondary" data-i18n="exit.yes">Çık</button>
+        <button id="btn-exit-no" class="btn-primary" data-i18n="exit.no">Devam Et</button>
       </div>
     </div>
   </div>
@@ -486,16 +486,16 @@
     <div class="settings-backdrop" id="settings-backdrop"></div>
     <div class="settings-content">
       <button id="btn-close-settings" class="settings-close">✕</button>
-      <h3 class="settings-title">Ayarlar</h3>
+      <h3 class="settings-title" data-i18n="settings.title">Ayarlar</h3>
       <div class="settings-row">
-        <span class="settings-label">Görünüm</span>
+        <span class="settings-label" data-i18n="settings.theme">Görünüm</span>
         <div class="toggle-group">
-          <button id="btn-theme-dark" class="toggle-btn active" data-mode="dark">Koyu</button>
-          <button id="btn-theme-light" class="toggle-btn" data-mode="light">Açık</button>
+          <button id="btn-theme-dark" class="toggle-btn active" data-mode="dark" data-i18n="settings.theme_dark">Koyu</button>
+          <button id="btn-theme-light" class="toggle-btn" data-mode="light" data-i18n="settings.theme_light">Açık</button>
         </div>
       </div>
       <div class="settings-row">
-        <span class="settings-label">Renk</span>
+        <span class="settings-label" data-i18n="settings.color">Renk</span>
         <div class="theme-swatches">
           <button class="theme-swatch active" data-color="default" title="Standart" style="background:#e94560"></button>
           <button class="theme-swatch" data-color="nebula" title="Nebula" style="background:#a855f7"></button>
@@ -505,14 +505,14 @@
         </div>
       </div>
       <div class="settings-row">
-        <span class="settings-label">Uyarı Sesi</span>
+        <span class="settings-label" data-i18n="settings.sound">Uyarı Sesi</span>
         <label class="switch">
           <input type="checkbox" id="setting-sound" checked>
           <span class="switch-slider"></span>
         </label>
       </div>
       <div class="settings-row" id="settings-duration-row">
-        <span class="settings-label">Oyun Süresi</span>
+        <span class="settings-label" data-i18n="settings.duration">Oyun Süresi</span>
         <div class="toggle-group">
           <button class="toggle-btn duration-btn active" data-dur="120">2 dk</button>
           <button class="toggle-btn duration-btn" data-dur="180">3 dk</button>
@@ -527,8 +527,8 @@
         </div>
       </div>
       <div class="settings-row">
-        <span class="settings-label">Yardım</span>
-        <button id="btn-show-tutorial" class="btn-tutorial-settings">Tutorial Göster</button>
+        <span class="settings-label" data-i18n="settings.help">Yardım</span>
+        <button id="btn-show-tutorial" class="btn-tutorial-settings" data-i18n="settings.tutorial">Tutorial Göster</button>
       </div>
     </div>
   </div>

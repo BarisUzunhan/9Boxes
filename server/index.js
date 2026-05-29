@@ -793,6 +793,37 @@ app.delete('/api/admin/blacklist/:word', requireAdmin, (req, res) => {
 // ─── Anlam API ────────────────────────────────────────────────
 
 app.get('/api/meaning/:word', async (req, res) => {
+  const lang = req.query.lang || 'tr';
+
+  if (lang === 'en') {
+    const word = req.params.word.toLocaleLowerCase('en-US');
+    const cacheKey = `en:${word}`;
+    if (_meaningCache.has(cacheKey)) return res.json(_meaningCache.get(cacheKey));
+    try {
+      const raw = await fetchURL(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      const entries = JSON.parse(raw);
+      const meanings = [];
+      if (Array.isArray(entries)) {
+        for (const entry of entries) {
+          for (const m of (entry.meanings || [])) {
+            const pos = m.partOfSpeech;
+            for (const def of (m.definitions || []).slice(0, 2)) {
+              meanings.push(`(${pos}) ${def.definition}`);
+              if (meanings.length >= 5) break;
+            }
+            if (meanings.length >= 5) break;
+          }
+          if (meanings.length >= 5) break;
+        }
+      }
+      const result = meanings.length > 0 ? { word, meanings } : null;
+      _meaningCache.set(cacheKey, result);
+      return res.json(result);
+    } catch {
+      return res.json(null);
+    }
+  }
+
   const word = req.params.word.toLocaleLowerCase('tr-TR');
   if (_meaningCache.has(word)) return res.json(_meaningCache.get(word));
   const { data } = await supabase
