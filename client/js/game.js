@@ -13,13 +13,13 @@ const LANG_CONFIGS = {
   tr: {
     letterPool: 'AAAAAAAAAAAEEEEEEEEEIIIIIIIINNNNNNNTTTTTTTKKKKKKLLLLLLRRRRRRMMMMMSSSSYYYYOOOODDDBBBUUUÜÜÇÇÇÖÖSŞZZHĞĞPPFVCGVAC',
     locale: 'tr-TR',
-    minLength: 2,
+    minLength: 1,
     vowels: ['A', 'E', 'I', 'İ', 'O', 'Ö', 'U', 'Ü'],
   },
   en: {
     letterPool: 'EEEEEEEEEEEEEAAAAAAAAOOOOOOOOTTTTTTTTTIIIIIIIINNNNNNNSSSSSSHHHHHHRRRRRRDDDDDLLLLLLCCCUUUMMMWWWFFGGYYPBBVK',
     locale: 'en-US',
-    minLength: 3,
+    minLength: 1,
     vowels: ['A', 'E', 'I', 'O', 'U'],
   },
 };

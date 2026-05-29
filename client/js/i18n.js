@@ -101,6 +101,9 @@ const TRANSLATIONS = {
     // Multi
     'multi.you': 'Sen',
     'multi.opponent': 'Rakip',
+    'multi.join': 'Katıl',
+    'multi.players': 'oyuncu',
+    'multi.waiting_approval': 'Oda sahibinin onayı bekleniyor...',
 
     // Daily
     'daily.back': '← Lobi',
@@ -212,6 +215,9 @@ const TRANSLATIONS = {
     // Multi
     'multi.you': 'You',
     'multi.opponent': 'Opponent',
+    'multi.join': 'Join',
+    'multi.players': 'players',
+    'multi.waiting_approval': 'Waiting for host approval...',
 
     // Daily
     'daily.back': '← Lobby',

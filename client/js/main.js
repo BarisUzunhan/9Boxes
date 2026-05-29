@@ -1906,19 +1906,24 @@ async function loadOpenRooms() {
     return;
   }
   empty.hidden = true;
-  list.innerHTML = data.map(r =>
-    `<div class="multi-open-row" onclick="joinOpenRoom('${r.code}')">
-      <div><div class="multi-open-host">${r.hostName}</div><div class="multi-open-info">${r.playerCount} oyuncu</div></div>
-      <button class="btn-secondary" style="font-size:.85rem;padding:7px 14px">Katıl</button>
-    </div>`
-  ).join('');
+  list.innerHTML = data.map(r => {
+    const langLabel = (r.lang || 'tr').toUpperCase();
+    return `<div class="multi-open-row" onclick="joinOpenRoom('${r.code}','${r.lang || 'tr'}')">
+      <div>
+        <div class="multi-open-host">${r.hostName} <span class="lang-badge">${langLabel}</span></div>
+        <div class="multi-open-info">${r.playerCount} ${t('multi.players')}</div>
+      </div>
+      <button class="btn-secondary" style="font-size:.85rem;padding:7px 14px">${t('multi.join')}</button>
+    </div>`;
+  }).join('');
 }
 
-function joinOpenRoom(code) {
+function joinOpenRoom(code, lang) {
+  if (lang) { setActiveLang(lang); applyLang(lang); switchDictionary(lang); }
   socket.emit('grp_request_join', { code });
   document.getElementById('mw-host-name').textContent = '—';
   document.getElementById('mw-code').textContent = code;
-  document.getElementById('mw-status').textContent = 'Oda sahibinin onayı bekleniyor...';
+  document.getElementById('mw-status').textContent = t('multi.waiting_approval');
   document.getElementById('mw-players-list').innerHTML = '';
   showScreen('screen-multi-wait');
 }
@@ -2204,9 +2209,10 @@ socket.on('grp_join_error', ({ error }) => {
   showScreen('screen-multi-lobby');
 });
 
-socket.on('grp_approved', ({ code, hostName }) => {
+socket.on('grp_approved', ({ code, hostName, lang }) => {
   _grpCode = code;
   _grpHostName = hostName || '—';
+  if (lang) { setActiveLang(lang); applyLang(lang); switchDictionary(lang); }
   document.getElementById('mw-host-name').textContent = hostName || '—';
   document.getElementById('mw-code').textContent = code;
   document.getElementById('mw-status').textContent = 'Oda sahibinin oyunu başlatması bekleniyor...';

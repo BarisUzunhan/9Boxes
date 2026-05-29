@@ -2,7 +2,7 @@
   "tr": {
     "name": "Türkçe",
     "locale": "tr-TR",
-    "minLength": 2,
+    "minLength": 1,
     "vowels": ["A","E","I","İ","O","Ö","U","Ü"],
     "letterPool": "AAAAAAAAAAAEEEEEEEEEIIIIIIIINNNNNNNTTTTTTTKKKKKKLLLLLLRRRRRRMMMMMSSSSYYYYOOOODDDBBBUUUÜÜÇÇÇÖÖSŞZZHĞĞPPFVCGVAC",
     "wordsFile": "words.json",
@@ -11,7 +11,7 @@
   "en": {
     "name": "English",
     "locale": "en-US",
-    "minLength": 2,
+    "minLength": 1,
     "vowels": ["A","E","I","O","U"],
     "letterPool": "EEEEEEEEEEEEEAAAAAAAAOOOOOOOOTTTTTTTTTIIIIIIIINNNNNNNSSSSSSHHHHHHRRRRRRDDDDDLLLLLLCCCUUUMMMWWWFFGGYYPBBVK",
     "wordsFile": "words_en.json",

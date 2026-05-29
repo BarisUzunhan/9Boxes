@@ -2393,6 +2393,7 @@ html, body {
 
 .multi-open-host { font-weight: 600; }
 .multi-open-info { font-size: .83rem; color: var(--text-dim); }
+.lang-badge { display: inline-block; font-size: .7rem; font-weight: 700; padding: 1px 5px; border-radius: 4px; background: var(--accent); color: #000; margin-left: 6px; vertical-align: middle; }
 
 /* Host kurulum ekranı — fill ekranıyla aynı yapı */
 #screen-multi-host {
