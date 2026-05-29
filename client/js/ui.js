@@ -6,6 +6,12 @@ import { t } from './i18n.js';
 export function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // Ekran değişince aktif tutorial overlay'i kapat ve tamamlandı olarak işaretle
+  const tut = document.getElementById('tut-overlay');
+  if (tut && !tut.hidden) {
+    tut.hidden = true;
+    ['lobby','fill','game','result'].forEach(k => localStorage.setItem(`verbum9_tut_${k}`, '1'));
+  }
 }
 
 // ─── Matris Doldurma Ekranı ──────────────────────────────────

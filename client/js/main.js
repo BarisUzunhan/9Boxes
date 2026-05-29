@@ -1,6 +1,6 @@
 import { loadDictionary, getWordArray, switchDictionary } from './dictionary.js';
 import { t, applyLang, setI18nLang } from './i18n.js';
-import { init as initTutorial, startLobby, startFill, startGame as startGameTutorial, startResult, showLobbyTutorial, onEnd as onTutorialEnd } from './tutorial.js';
+import { init as initTutorial, startLobby, startFill, startGame as startGameTutorial, startResult, showLobbyTutorial, onEnd as onTutorialEnd, end as endTutorial } from './tutorial.js';
 import {
   state, PHASES,
   getRandomLetter, setFillLetter,
