@@ -1679,9 +1679,20 @@ async function showMeaning(word) {
 
   const lang = getActiveLang();
   const locale = getActiveLangConfig().locale;
+  const url = `/api/meaning/${encodeURIComponent(word.toLocaleLowerCase(locale))}?lang=${lang}`;
+
+  async function tryFetch() {
+    const res = await fetch(url);
+    return res.json();
+  }
+
   try {
-    const res = await fetch(`/api/meaning/${encodeURIComponent(word.toLocaleLowerCase(locale))}?lang=${lang}`);
-    const data = await res.json();
+    let data = await tryFetch();
+    if (!data || !data.meanings || data.meanings.length === 0) {
+      await new Promise(r => setTimeout(r, 900));
+      if (popup.hidden) return; // popup kapatıldıysa iptal
+      data = await tryFetch();
+    }
     if (data && data.meanings && data.meanings.length > 0) {
       bodyEl.innerHTML = '<ol>' + data.meanings.map(m => `<li>${m}</li>`).join('') + '</ol>';
     } else {
