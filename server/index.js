@@ -809,52 +809,6 @@ app.delete('/api/admin/blacklist/:word', requireAdmin, (req, res) => {
 
 // ─── Anlam API ────────────────────────────────────────────────
 
-// dictionaryapi.dev dil kodu eşleştirmesi (pt-BR gibi farklar için)
-const DICT_API_LANG = { en: 'en', de: 'de', es: 'es', fr: 'fr', pt: 'pt-BR', it: 'it' };
-
-function fetchURL(url) {
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, { headers: { 'User-Agent': 'Verbum9/1.0' } }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) resolve(data);
-        else reject(new Error(`HTTP ${res.statusCode}`));
-      });
-    });
-    req.on('error', reject);
-    req.setTimeout(8000, () => { req.destroy(); reject(new Error('timeout')); });
-  });
-}
-
-async function fetchDictMeanings(word, lang) {
-  const apiLang = DICT_API_LANG[lang] || lang;
-  const url = `https://api.dictionaryapi.dev/api/v2/entries/${apiLang}/${encodeURIComponent(word)}`;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const raw = await fetchURL(url);
-      const entries = JSON.parse(raw);
-      const meanings = [];
-      if (Array.isArray(entries)) {
-        for (const entry of entries) {
-          for (const m of (entry.meanings || [])) {
-            const pos = m.partOfSpeech;
-            for (const def of (m.definitions || []).slice(0, 2)) {
-              meanings.push(`(${pos}) ${def.definition}`);
-              if (meanings.length >= 5) break;
-            }
-            if (meanings.length >= 5) break;
-          }
-          if (meanings.length >= 5) break;
-        }
-      }
-      if (meanings.length > 0) return meanings;
-    } catch {
-      if (attempt === 0) await new Promise(r => setTimeout(r, 600));
-    }
-  }
-  return [];
-}
 
 app.get('/api/meaning/:word', async (req, res) => {
   const lang = req.query.lang || 'tr';
@@ -874,23 +828,10 @@ app.get('/api/meaning/:word', async (req, res) => {
     .eq('word', dbKey)
     .maybeSingle();
 
-  // DB'de anlamlı sonuç varsa direkt dön
+  // DB'de anlamlı sonuç varsa döndür, yoksa null — tüm diller sadece kendi DB'sinden beslenir
   if (stored && stored.meanings && stored.meanings.length > 0) {
     const result = { word: rawWord, meanings: stored.meanings };
     _meaningCache.set(cacheKey, result);
-    return res.json(result);
-  }
-
-  // Türkçe için dış API yok — sadece oyun DB'si
-  if (lang === 'tr') return res.json(null);
-
-  // Diğer diller: dictionaryapi.dev'den çek (retry dahil)
-  // DB'de yoksa veya boş meanings varsa (populate sırasında rate-limit yemiş olabilir)
-  const meanings = await fetchDictMeanings(rawWord, lang);
-  if (meanings.length > 0) {
-    const result = { word: rawWord, meanings };
-    _meaningCache.set(cacheKey, result);
-    supabase.from('word_meanings').upsert({ word: dbKey, meanings }).catch(() => {});
     return res.json(result);
   }
   return res.json(null);
