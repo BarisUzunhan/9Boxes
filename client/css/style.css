@@ -3126,3 +3126,50 @@ body.light .bg-blob-3 { opacity: 0.04; }
 /* CRT temalarında blob yok — canvas kalır (bg rengi için), sadece bloblar gizlenir */
 body.theme-crt-green .bg-blob,
 body.theme-crt-amber .bg-blob { display: none; }
+
+/* ── KARA KARE ──────────────────────────────── */
+body.theme-kara-kare {
+  --bg:        #000000;
+  --surface:   #111111;
+  --surface2:  #1a1a1a;
+  --tile:      #ffffff;
+  --tile-hover:#eeeeee;
+  --tile-used: #cccccc;
+  --accent:    #ffffff;
+  --accent2:   #999999;
+  --text:      #ffffff;
+  --text-dim:  #888888;
+  --radius:    6px;
+  font-family: Consolas, 'Courier New', Courier, monospace;
+}
+body.theme-kara-kare .tile {
+  color: #000000;
+}
+body.theme-kara-kare .fill-mode .tile.filled {
+  border-color: #333333;
+}
+body.theme-kara-kare .btn-primary {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+body.theme-kara-kare .bg-blob { display: none; }
+
+body.theme-kara-kare.light {
+  --bg:        #ffffff;
+  --surface:   #f0f0f0;
+  --surface2:  #e0e0e0;
+  --tile:      #000000;
+  --tile-hover:#222222;
+  --tile-used: #444444;
+  --accent:    #000000;
+  --accent2:   #555555;
+  --text:      #000000;
+  --text-dim:  #666666;
+}
+body.theme-kara-kare.light .tile {
+  color: #ffffff;
+}
+body.theme-kara-kare.light .fill-mode .tile.filled {
+  border-color: #cccccc;
+}
+body.theme-kara-kare.light .bg-blob { display: none; }

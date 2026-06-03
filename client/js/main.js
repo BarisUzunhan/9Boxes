@@ -91,7 +91,7 @@ let _soundEnabled = true;
 let _gameDuration = 120;
 
 function applyColorTheme(name) {
-  ['nebula', 'ember', 'crt-green', 'crt-amber'].forEach(t => {
+  ['nebula', 'ember', 'crt-green', 'crt-amber', 'kara-kare'].forEach(t => {
     document.body.classList.remove('theme-' + t);
   });
   if (name && name !== 'default') {
