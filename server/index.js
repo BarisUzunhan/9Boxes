@@ -12,8 +12,9 @@ const crypto = require('crypto');
 const os = require('os');
 const bcrypt = require('bcryptjs');
 const { Server } = require('socket.io');
-const userService = require('./userService');
-const supabase    = require('./supabase');
+const userService      = require('./userService');
+const supabase         = require('./supabase');
+const groupRoomStore   = require('./groupRoomStore');
 const https = require('https');
 
 const APP_URL = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -1471,6 +1472,7 @@ async function grpRoomEnd(room) {
   }
   allWords.sort((a, b) => b.length - a.length || a.word.localeCompare(b.word, 'tr'));
   io.to(`grp_${room.code}`).emit('grp_ended', { rankings, words: allWords.slice(0, 100) });
+  groupRoomStore.upsertRoom(room); // final skoru kaydet
   setTimeout(() => {
     for (const p of room.players) {
       if (p.socket) socketGroupRoom.delete(p.socket.id);
@@ -1481,6 +1483,7 @@ async function grpRoomEnd(room) {
       userGroupRoom.delete(String(p.userId));
     }
     groupRooms.delete(room.code);
+    groupRoomStore.deleteRoom(room.code); // 5 dk sonra DB'den de sil
   }, 5 * 60 * 1000);
 }
 
@@ -1520,6 +1523,7 @@ function leaveGroupRoom(socket, room) {
       userGroupRoom.delete(String(p.userId));
     }
     groupRooms.delete(room.code);
+    groupRoomStore.deleteRoom(room.code); // host çıktıysa oda DB'den de silinsin
     return;
   }
 
@@ -1536,6 +1540,7 @@ function leaveGroupRoom(socket, room) {
         io.to(`grp_${room.code}`).emit('grp_players_update', {
           players: room.players.filter(p => p.socket).map(p => ({ displayName: p.displayName, userId: p.userId }))
         });
+        groupRoomStore.upsertRoom(room); // oyuncu kalıcı olarak ayrılınca güncelle
       }
     }, 30000);
   } else {
@@ -1658,30 +1663,36 @@ io.on('connection', socket => {
   // ─── Grup Odası Socket Olayları ──────────────────────────────
 
   socket.on('grp_create', async ({ displayName, lang }) => {
-    if (!authToken) return;
-    const user = await userService.getUserByToken(authToken);
-    if (!user) return;
-    // Eski oda varsa temizle
-    const oldCode = socketGroupRoom.get(socket.id);
-    if (oldCode) {
-      const oldRoom = groupRooms.get(oldCode);
-      if (oldRoom) leaveGroupRoom(socket, oldRoom);
-      else socketGroupRoom.delete(socket.id);
+    try {
+      if (!authToken) return socket.emit('grp_create_error', { error: 'Giriş gerekli. Lütfen yeniden giriş yap.' });
+      const user = await userService.getUserByToken(authToken);
+      if (!user) return socket.emit('grp_create_error', { error: 'Oturum süresi doldu. Lütfen yeniden giriş yap.' });
+      // Eski oda varsa temizle
+      const oldCode = socketGroupRoom.get(socket.id);
+      if (oldCode) {
+        const oldRoom = groupRooms.get(oldCode);
+        if (oldRoom) leaveGroupRoom(socket, oldRoom);
+        else socketGroupRoom.delete(socket.id);
+      }
+      const name = ((displayName || '').trim() || user.username).slice(0, 20);
+      const gameLang = (_wordSets[lang] ? lang : null) || 'tr';
+      const code = genGroupCode();
+      const room = {
+        code, lang: gameLang, host: { socket, userId: user.id, username: user.username, displayName: name },
+        matrix: [], duration: 180, status: 'lobby', joinMode: 'open',
+        players: [{ socket, userId: user.id, username: user.username, displayName: name, words: [], score: 0 }],
+        pendingPlayers: [], timerInterval: null, timeLeft: 180,
+      };
+      groupRooms.set(code, room);
+      socketGroupRoom.set(socket.id, code);
+      userGroupRoom.set(String(user.id), code);
+      socket.join(`grp_${code}`);
+      socket.emit('grp_created', { code, lang: gameLang });
+      groupRoomStore.upsertRoom(room);
+    } catch (err) {
+      console.error('[grp_create]', err);
+      socket.emit('grp_create_error', { error: 'Oda oluşturulamadı, tekrar dene.' });
     }
-    const name = ((displayName || '').trim() || user.username).slice(0, 20);
-    const gameLang = (_wordSets[lang] ? lang : null) || 'tr';
-    const code = genGroupCode();
-    const room = {
-      code, lang: gameLang, host: { socket, userId: user.id, username: user.username, displayName: name },
-      matrix: [], duration: 180, status: 'lobby', joinMode: null,
-      players: [{ socket, userId: user.id, username: user.username, displayName: name, words: [], score: 0 }],
-      pendingPlayers: [], timerInterval: null, timeLeft: 180,
-    };
-    groupRooms.set(code, room);
-    socketGroupRoom.set(socket.id, code);
-    userGroupRoom.set(String(user.id), code);
-    socket.join(`grp_${code}`);
-    socket.emit('grp_created', { code, lang: gameLang });
   });
 
   socket.on('grp_set_invite_mode', ({ code, mode }) => {
@@ -1690,6 +1701,7 @@ io.on('connection', socket => {
     if (!['open', 'code'].includes(mode)) return;
     room.joinMode = mode;
     socket.emit('grp_mode_set', { mode });
+    groupRoomStore.upsertRoom(room);
   });
 
   socket.on('grp_invite_friends', async ({ code, friendIds }) => {
@@ -1726,6 +1738,7 @@ io.on('connection', socket => {
     io.to(`grp_${code}`).emit('grp_players_update', {
       players: room.players.map(p => ({ displayName: p.displayName, userId: p.userId }))
     });
+    groupRoomStore.upsertRoom(room);
   });
 
   socket.on('grp_request_join', async ({ code }) => {
@@ -1737,6 +1750,7 @@ io.on('connection', socket => {
     if (!user) return socket.emit('grp_join_error', { error: 'Giriş gerekli.' });
     if (room.players.some(p => p.userId === user.id)) return socket.emit('grp_join_error', { error: 'Zaten odadasın.' });
     if (room.pendingPlayers.some(p => p.userId === user.id)) return socket.emit('grp_join_error', { error: 'Onay bekleniyor.' });
+    if (!room.host.socket) return socket.emit('grp_join_error', { error: 'Oda sahibi şu an çevrimdışı, lütfen biraz sonra tekrar dene.' });
     room.pendingPlayers.push({ socket, userId: user.id, username: user.username, displayName: user.username });
     socket.emit('grp_waiting_approval');
     room.host.socket.emit('grp_join_request', { socketId: socket.id, displayName: user.username, userId: user.id });
@@ -1757,6 +1771,7 @@ io.on('connection', socket => {
       io.to(`grp_${code}`).emit('grp_players_update', {
         players: room.players.map(p => ({ displayName: p.displayName, userId: p.userId }))
       });
+      groupRoomStore.upsertRoom(room);
     } else {
       player.socket.emit('grp_rejected');
     }
@@ -1772,6 +1787,7 @@ io.on('connection', socket => {
     room.timeLeft = room.duration;
     room.status = 'playing';
     io.to(`grp_${code}`).emit('grp_started', { matrix: room.matrix, duration: room.duration });
+    groupRoomStore.upsertRoom(room);
     let n = 5;
     io.to(`grp_${code}`).emit('grp_countdown', { n });
     const cdInterval = setInterval(() => {
@@ -1782,6 +1798,8 @@ io.on('connection', socket => {
         room.timerInterval = setInterval(() => {
           room.timeLeft--;
           io.to(`grp_${code}`).emit('grp_timer_tick', { timeLeft: room.timeLeft });
+          // Her 15 saniyede bir skoru/kelimeleri kaydet (her kelimede yazmak yerine debounce)
+          if (room.timeLeft % 15 === 0) groupRoomStore.upsertRoom(room);
           if (room.timeLeft <= 0) grpRoomEnd(room);
         }, 1000);
       } else {
@@ -2115,10 +2133,64 @@ io.on('connection', socket => {
 
 // ─── Başlat ──────────────────────────────────────────────────
 
+/**
+ * Sunucu başlayınca DB'deki grup odalarını belleğe geri yükler.
+ * Socket referansları null olarak kurulur; oyuncular grp_check_active / grp_rejoin ile yeniden bağlanır.
+ */
+async function rebuildGroupRooms() {
+  try {
+    const rows = await groupRoomStore.loadAll();
+    const cutoff = Date.now() - 6 * 60 * 60 * 1000; // 6 saatten eski odaları atla
+    let loaded = 0;
+    for (const row of rows) {
+      if (row.status === 'ended') { groupRoomStore.deleteRoom(row.code); continue; }
+      if (new Date(row.created_at).getTime() < cutoff) { groupRoomStore.deleteRoom(row.code); continue; }
+      const room = {
+        code: row.code,
+        lang: row.lang,
+        matrix: row.matrix || [],
+        duration: row.duration || 180,
+        status: row.status,
+        joinMode: row.join_mode,
+        timeLeft: row.time_left || row.duration || 180,
+        host: { socket: null, userId: row.host_user_id, username: '', displayName: row.host_display_name || '' },
+        players: (row.players || []).map(p => ({
+          socket: null,
+          userId: p.userId,
+          username: p.username || '',
+          displayName: p.displayName || '',
+          score: p.score || 0,
+          words: p.words || [],
+        })),
+        pendingPlayers: [],
+        timerInterval: null,
+      };
+      groupRooms.set(row.code, room);
+      // userGroupRoom: grp_check_active ve grp_rejoin'in çalışması için kritik
+      for (const p of room.players) {
+        userGroupRoom.set(String(p.userId), row.code);
+      }
+      // Oyun devam ediyorsa timer'ı yeniden başlat
+      if (room.status === 'playing' && room.timeLeft > 0) {
+        room.timerInterval = setInterval(() => {
+          room.timeLeft--;
+          io.to(`grp_${room.code}`).emit('grp_timer_tick', { timeLeft: room.timeLeft });
+          if (room.timeLeft <= 0) grpRoomEnd(room);
+        }, 1000);
+      }
+      loaded++;
+    }
+    if (loaded > 0) console.log(`[rebuildGroupRooms] ${loaded} oda yüklendi.`);
+  } catch (err) {
+    console.error('[rebuildGroupRooms]', err);
+  }
+}
+
 server.listen(PORT, () => {
   const ip = getLocalIP();
   console.log(`\nVerbum9 çalışıyor → http://localhost:${PORT}`);
   console.log(`Telefon / ağ      → http://${ip}:${PORT}`);
   console.log(`Sözlük            → http://localhost:${PORT}/sozluk`);
   console.log(`Admin             → http://localhost:${PORT}/admin\n`);
+  rebuildGroupRooms();
 });

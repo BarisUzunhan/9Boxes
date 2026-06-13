@@ -34,6 +34,14 @@ const mp = { playerIndex: -1, turnIndex: -1, opponentName: '', myScore: 0, inval
 // io global olarak /socket.io/socket.io.js tarafından yüklenir
 const socket = io({ autoConnect: false });
 
+// Grup akışına girmeden önce soketin bağlı olduğunu garantile.
+// 1v1 modundan çıkınca veya token yenilenince soket kapanabilir; bu fonksiyon geri getirir.
+function ensureSocket() {
+  const token = localStorage.getItem(TOKEN_KEY);
+  socket.auth = { token };
+  if (!socket.connected) socket.connect();
+}
+
 // ─── Wake Lock (ekran uyumasın) ───────────────────────────────
 
 let _wakeLock = null;
@@ -578,8 +586,11 @@ function bindAuth() {
     if (data.ok) {
       localStorage.setItem(TOKEN_KEY, data.token);
       currentUser = data.user;
+      // Token her girişte yenilenir; mevcut soket eski token'ı tutar.
+      // Sert yeniden bağlantıyla yeni token'ı handshake'e taşı.
       socket.auth = { token: data.token };
-      if (!socket.connected) socket.connect();
+      if (socket.connected) socket.disconnect();
+      socket.connect();
       renderLobby();
       showScreen('screen-lobby');
       const isNewUser = localStorage.getItem('verbum9_new_user');
@@ -1954,6 +1965,7 @@ let _grpCode = '';
 let _grpHostName = '';
 let _grpSelectedFriendIds = new Set();
 let _grpInviteCode = '';
+let _grpCreateTimer = null; // oda oluşturma zaman aşımı
 
 // Host matris durumu
 let _mhMatrix = Array(9).fill('');
@@ -1961,6 +1973,7 @@ let _mhActiveCell = 0;
 let _mhDuration = 180;
 
 function goToMultiLobby() {
+  ensureSocket(); // soket kapandıysa (örn. 1v1 sonrası) yeniden bağlan
   showScreen('screen-multi-lobby');
   document.getElementById('multi-code-input').value = '';
   document.getElementById('multi-join-error').textContent = '';
@@ -1992,6 +2005,7 @@ async function loadOpenRooms() {
 }
 
 function joinOpenRoom(code, lang) {
+  ensureSocket();
   if (lang) { setActiveLangTemp(lang); applyLang(lang); switchDictionary(lang); }
   socket.emit('grp_request_join', { code });
   document.getElementById('mw-host-name').textContent = '—';
@@ -2014,6 +2028,7 @@ document.getElementById('btn-multi-join-code').addEventListener('click', () => {
   if (code.length !== 6 || !/^\d{6}$/.test(code)) {
     errEl.textContent = '6 haneli bir kod gir.'; return;
   }
+  ensureSocket();
   socket.emit('grp_join', { code });
 });
 
@@ -2039,7 +2054,12 @@ document.getElementById('btn-multi-name-confirm').addEventListener('click', () =
   errEl.textContent = '';
   if (!name) { errEl.textContent = 'Bir isim gir.'; return; }
   document.getElementById('multi-name-popup').hidden = true;
+  ensureSocket();
   socket.emit('grp_create', { displayName: name, lang: getActiveLang() });
+  // Sunucu yanıt vermezse kullanıcıya bildir (grp_create_error veya grp_created temizler)
+  _grpCreateTimer = setTimeout(() => {
+    showToast('Oda oluşturulamadı — sunucu yanıt vermedi. Tekrar dene.', 5000);
+  }, 8000);
 });
 
 document.getElementById('multi-display-name').addEventListener('keydown', e => {
@@ -2263,6 +2283,7 @@ socket.on('grp_friend_invite', ({ code, fromName }) => {
 document.getElementById('btn-grp-invite-accept').addEventListener('click', () => {
   document.getElementById('grp-invite-popup').hidden = true;
   if (!_grpIncomingCode) return;
+  ensureSocket();
   socket.emit('grp_join', { code: _grpIncomingCode });
   _grpIncomingCode = '';
 });
@@ -2274,7 +2295,19 @@ document.getElementById('btn-grp-invite-decline').addEventListener('click', () =
 
 // Socket olayları — Grup
 socket.on('grp_created', ({ code }) => {
+  clearTimeout(_grpCreateTimer);
   setupHostScreen(code);
+});
+
+socket.on('grp_create_error', ({ error }) => {
+  clearTimeout(_grpCreateTimer);
+  showToast(error || 'Oda oluşturulamadı.', 4000);
+});
+
+socket.on('grp_start_error', ({ error }) => {
+  showToast(error || 'Oyun başlatılamadı.', 4000);
+  const btn = document.getElementById('btn-mh-start');
+  if (btn) btn.disabled = false; // Başlat butonu tıklandığında disable edilir; hata varsa geri aç
 });
 
 socket.on('grp_join_error', ({ error }) => {
