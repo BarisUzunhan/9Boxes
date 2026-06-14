@@ -36,8 +36,8 @@ const TRANSLATIONS = {
     // Fill
     'fill.title': 'Harfleri Seç',
     'fill.hint': 'Klavyeyle yaz veya hücreye tıkla.',
-    'fill.random_one': '🎲 Bu Hücreyi',
-    'fill.random_all': '🎲 Tümünü',
+    'fill.random_one': '🎲 Rastgele Harf',
+    'fill.random_all': '🎲 Rastgele Doldur',
     'fill.start': 'Başla →',
     'fill.my_turn': '⬤ Senin sıran — bir hücre seç ve harf gir',
     'fill.opponent_turn': '⬤ {name} seçiyor...',
@@ -245,8 +245,8 @@ const TRANSLATIONS = {
     // Fill
     'fill.title': 'Choose Letters',
     'fill.hint': 'Type on keyboard or tap a cell.',
-    'fill.random_one': '🎲 This Cell',
-    'fill.random_all': '🎲 All',
+    'fill.random_one': '🎲 Random Letter',
+    'fill.random_all': '🎲 All Random',
     'fill.start': 'Start →',
     'fill.my_turn': '⬤ Your turn — pick a cell and type a letter',
     'fill.opponent_turn': '⬤ {name} is choosing...',
