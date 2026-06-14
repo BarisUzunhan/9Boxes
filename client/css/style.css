@@ -574,6 +574,18 @@ html, body {
   justify-content: center;
 }
 
+/* Rastgele Harf ve Rastgele Doldur her zaman yan yana, eşit genişlikte (ilk satır) */
+#btn-random-one, #btn-random-all,
+#btn-mh-rand-one, #btn-mh-rand-all {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Başla alt satırda; ⌨ butonuyla aynı satırı paylaşır ve kalan alanı doldurur */
+#btn-start-game {
+  flex: 1;
+}
+
 /* ── GERİ SAYIM OVERLAY ───────────────────── */
 
 .countdown-overlay {
