@@ -27,8 +27,6 @@
   --text-dim:   #8892b0;
   --radius:     12px;
   --tile-size:  clamp(70px, 20vw, 110px);
-  /* Masaüstünde tüm ekranları ortalamak için hedef genişlik (matris + iç boşluk) */
-  --app-w: calc(3 * var(--tile-size) + 48px);
 }
 
 body.light {
@@ -1131,33 +1129,21 @@ html, body {
   position: relative;
 }
 
-/* Geniş/yatay ekranda tüm ekranları matris genişliğinde ortala.
-   600px altında (mobil) hiçbir kural uygulanmaz — mevcut görünüm korunur. */
-@media (min-width: 600px) {
-  /* Yanları koyu göster; ortadaki sütun "telefon ekranı" gibi öne çıksın */
-  html {
-    background: #04040f;
-  }
-
-  /* Arka plan animasyonunu da merkeze kısıtla */
-  #bg-canvas {
-    max-width: var(--app-w);
-    margin-inline: auto;
-  }
-
-  .screen {
-    max-width: var(--app-w);
-    margin-inline: auto;
-  }
-
-  /* Kayan kelime paneli ve toggle butonu viewport kenarı yerine
-     ortadaki sütunun sağ kenarına yapışsın */
-  .words-panel {
-    right: calc(50% - var(--app-w) / 2);
-  }
-
+@media (min-width: 700px) {
   .btn-toggle-words {
-    right: calc(50% - var(--app-w) / 2 + 16px);
+    display: none;
+  }
+
+  .words-panel {
+    position: relative;
+    transform: none !important;
+    width: 280px;
+    border-left: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+
+  .btn-close-panel {
+    display: none;
   }
 }
 
@@ -1183,6 +1169,12 @@ html, body {
 
 #btn-fill-keyboard {
   display: none; /* JS ile multi modda gösterilir */
+}
+
+@media (min-width: 700px) {
+  .btn-keyboard {
+    display: none;
+  }
 }
 
 /* ── LOBİ STAT ŞERİDİ ────────────────────── */
