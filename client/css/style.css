@@ -1134,6 +1134,17 @@ html, body {
 /* Geniş/yatay ekranda tüm ekranları matris genişliğinde ortala.
    600px altında (mobil) hiçbir kural uygulanmaz — mevcut görünüm korunur. */
 @media (min-width: 600px) {
+  /* Yanları koyu göster; ortadaki sütun "telefon ekranı" gibi öne çıksın */
+  html {
+    background: #04040f;
+  }
+
+  /* Arka plan animasyonunu da merkeze kısıtla */
+  #bg-canvas {
+    max-width: var(--app-w);
+    margin-inline: auto;
+  }
+
   .screen {
     max-width: var(--app-w);
     margin-inline: auto;
