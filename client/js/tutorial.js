@@ -1,9 +1,9 @@
 // ─── Depolama anahtarları ─────────────────────────────────────
 const KEYS = {
-  lobby:  'verbum9_tut_lobby',
-  fill:   'verbum9_tut_fill',
-  game:   'verbum9_tut_game',
-  result: 'verbum9_tut_result',
+  lobby:  '9boxes_tut_lobby',
+  fill:   '9boxes_tut_fill',
+  game:   '9boxes_tut_game',
+  result: '9boxes_tut_result',
 };
 
 // ─── Bölüm sonu callback'leri ─────────────────────────────────
@@ -18,7 +18,7 @@ const SECTIONS = {
   lobby: [
     {
       title: 'Hoş Geldin!',
-      text: 'Verbum9\'ya hoş geldin! Sana arayüzü kısaca tanıtalım. Hazır mısın?',
+      text: '9Boxes\'a hoş geldin! Sana arayüzü kısaca tanıtalım. Hazır mısın?',
     },
     {
       sel: '#btn-profile',

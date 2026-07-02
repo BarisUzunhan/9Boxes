@@ -19,20 +19,27 @@ const https = require('https');
 
 const APP_URL = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
 
+// 9Boxes marka logosu — e-posta gövdeleri için tamamen inline-stilli kutucuklar
+function brandLogoEmailHtml() {
+  const boxStyle = 'display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;' +
+    "background:#e94560;color:#0f0e17;border-radius:6px;font-family:Consolas,'Courier New',monospace;" +
+    'font-weight:700;font-size:18px;margin-right:5px';
+  return `<div style="margin:0 0 24px;white-space:nowrap">${['9','B','O','X','E','S']
+    .map(l => `<span style="${boxStyle}">${l}</span>`).join('')}</div>`;
+}
+
 async function sendVerificationEmail(to, token, username = '') {
   const link = `${APP_URL}/verify-email?token=${token}`;
   const body = JSON.stringify({
-    sender:      { name: 'Verbum9', email: process.env.BREVO_SENDER_EMAIL || to },
+    sender:      { name: '9Boxes', email: process.env.BREVO_SENDER_EMAIL || to },
     to:          [{ email: to }],
-    subject:     'Verbum9 — E-posta Adresini Doğrula',
+    subject:     '9Boxes — E-posta Adresini Doğrula',
     htmlContent: `
       <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px;background:#0f0e17;color:#fff;border-radius:16px">
-        <h1 style="margin:0 0 24px;letter-spacing:-1px">
-          <span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span>
-        </h1>
+        ${brandLogoEmailHtml()}
         <p style="font-size:1rem;margin:0 0 8px">Merhaba <strong>${username}</strong>!</p>
         <p style="color:#8892b0;line-height:1.6;margin:0 0 24px">
-          <strong style="color:#4cc9f0">${username}</strong> kullanıcı adıyla Verbum9'a kaydoldun.<br><br>
+          <strong style="color:#4cc9f0">${username}</strong> kullanıcı adıyla 9Boxes'a kaydoldun.<br><br>
           Hesabını aktifleştirmek için aşağıdaki butona bas. Link <strong style="color:#fff">24 saat</strong> geçerlidir.
         </p>
         <a href="${link}"
@@ -75,17 +82,15 @@ async function sendVerificationEmail(to, token, username = '') {
 async function sendPasswordResetEmail(to, token, username) {
   const link = `${APP_URL}/reset-password?token=${token}`;
   const body = JSON.stringify({
-    sender:      { name: 'Verbum9', email: process.env.BREVO_SENDER_EMAIL || to },
+    sender:      { name: '9Boxes', email: process.env.BREVO_SENDER_EMAIL || to },
     to:          [{ email: to }],
-    subject:     'Verbum9 — Şifre Sıfırlama',
+    subject:     '9Boxes — Şifre Sıfırlama',
     htmlContent: `
       <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px;background:#0f0e17;color:#fff;border-radius:16px">
-        <h1 style="margin:0 0 24px;letter-spacing:-1px">
-          <span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span>
-        </h1>
+        ${brandLogoEmailHtml()}
         <p style="font-size:1rem;margin:0 0 8px">Merhaba <strong>${username}</strong>!</p>
         <p style="color:#8892b0;line-height:1.6;margin:0 0 24px">
-          <strong style="color:#fff">Verbum9</strong>'daki <strong style="color:#4cc9f0">${username}</strong>
+          <strong style="color:#fff">9Boxes</strong>'daki <strong style="color:#4cc9f0">${username}</strong>
           hesabın için şifre sıfırlama isteği aldık.<br><br>
           Aşağıdaki butona basarak yeni şifreni belirleyebilirsin. Link <strong style="color:#fff">1 saat</strong> geçerlidir.<br><br>
           <span style="font-size:0.9rem">Bu isteği sen yapmadıysan bu e-postayı görmezden gelebilirsin, şifren değişmeyecek.</span>
@@ -135,17 +140,15 @@ async function sendInviteEmail(to, fromName, message) {
        </p>`
     : '';
   const body = JSON.stringify({
-    sender:      { name: 'Verbum9', email: process.env.BREVO_SENDER_EMAIL },
+    sender:      { name: '9Boxes', email: process.env.BREVO_SENDER_EMAIL },
     to:          [{ email: to }],
-    subject:     `${fromName} seni Verbum oynamaya davet ediyor!`,
+    subject:     `${fromName} seni 9Boxes oynamaya davet ediyor!`,
     htmlContent: `
       <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px;background:#0f0e17;color:#fff;border-radius:16px">
-        <h1 style="margin:0 0 24px;letter-spacing:-1px">
-          <span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span>
-        </h1>
+        ${brandLogoEmailHtml()}
         <p style="font-size:1rem;margin:0 0 16px">Merhaba!</p>
         <p style="color:#ccd6f6;line-height:1.7;margin:0 0 20px">
-          Arkadaşın <strong style="color:#fff">${fromName}</strong> seni Verbum oynamaya davet ediyor.
+          Arkadaşın <strong style="color:#fff">${fromName}</strong> seni 9Boxes oynamaya davet ediyor.
         </p>
         ${msgBlock}
         <p style="color:#ccd6f6;line-height:1.7;margin:0 0 28px">
@@ -154,7 +157,7 @@ async function sendInviteEmail(to, fromName, message) {
         <a href="${link}"
            style="display:inline-block;padding:14px 28px;background:#e94560;color:#fff;
                   border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem">
-          Verbum9'a Katıl →
+          9Boxes'a Katıl →
         </a>
         <p style="color:#8892b0;font-size:0.8rem;margin-top:24px;word-break:break-all">
           Buton çalışmıyorsa: ${link}
@@ -191,14 +194,17 @@ async function sendInviteEmail(to, fromName, message) {
 function resetPasswordPage(token) {
   return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Verbum9 — Şifre Sıfırla</title>
+  <title>9Boxes — Şifre Sıfırla</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui;min-height:100vh;display:flex;align-items:center;
          justify-content:center;background:#0f0e17;color:#fff;padding:24px}
     .card{background:#1a1a2e;border-radius:20px;padding:40px 32px;text-align:center;
           max-width:420px;width:100%}
-    h1{font-size:2rem;letter-spacing:-1px;margin-bottom:8px}
+    .brand-logo{display:inline-flex;gap:4px;margin-bottom:16px}
+    .brand-box{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+               background:#e94560;color:#0f0e17;border-radius:6px;font-family:Consolas,'Courier New',monospace;
+               font-weight:700;font-size:20px}
     p{color:#8892b0;line-height:1.6;margin-bottom:24px;font-size:.9rem}
     .fg{text-align:left;margin-bottom:16px}
     label{display:block;font-size:.75rem;color:#8892b0;text-transform:uppercase;
@@ -216,7 +222,7 @@ function resetPasswordPage(token) {
   </style>
   </head><body>
   <div class="card">
-    <h1><span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span></h1>
+    <div class="brand-logo">${['9','B','O','X','E','S'].map(l => `<span class="brand-box">${l}</span>`).join('')}</div>
     <p>Yeni şifreni gir.</p>
     <form id="frm" onsubmit="doReset(event)">
       <div class="fg"><label>Yeni Şifre</label>
@@ -260,19 +266,22 @@ function verifyPage(msg, success, username = '') {
     : '';
   return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Verbum9</title>
+    <title>9Boxes</title>
     <style>*{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui;min-height:100vh;display:flex;align-items:center;
          justify-content:center;background:#0f0e17;color:#fff;padding:24px}
     .card{background:#1a1a2e;border-radius:20px;padding:40px 32px;text-align:center;
           max-width:420px;width:100%}
-    h1{font-size:2.5rem;letter-spacing:-1px;margin-bottom:24px}
+    .brand-logo{display:inline-flex;gap:4px;margin-bottom:24px}
+    .brand-box{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+               background:#e94560;color:#0f0e17;border-radius:6px;font-family:Consolas,'Courier New',monospace;
+               font-weight:700;font-size:20px}
     .icon{font-size:3rem;margin-bottom:16px}
     p{color:#8892b0;line-height:1.6;margin-bottom:24px}
     a{display:inline-block;padding:12px 24px;background:#e94560;color:#fff;
       border-radius:10px;text-decoration:none;font-weight:700}</style>
   </head><body><div class="card">
-    <h1><span style="color:#e94560">VERBUM</span><span style="color:#4cc9f0">9</span></h1>
+    <div class="brand-logo">${['9','B','O','X','E','S'].map(l => `<span class="brand-box">${l}</span>`).join('')}</div>
     <div class="icon">${success ? '✅' : '❌'}</div>
     <p style="color:${color};font-weight:600;font-size:1.1rem;margin-bottom:16px">${msg}</p>
     ${usernameHtml}
@@ -328,7 +337,7 @@ async function checkTDK(word, withMeanings = false) {
       hostname: 'sozluk.gov.tr',
       path:     `/gts?ara=${encodeURIComponent(word)}`,
       method:   'GET',
-      headers:  { 'User-Agent': 'Verbum9/1.0' },
+      headers:  { 'User-Agent': '9Boxes/1.0' },
     }, res => {
       let data = '';
       res.on('data', d => data += d);
@@ -362,7 +371,7 @@ function requireAdmin(req, res, next) {
   const decoded = Buffer.from(b64, 'base64').toString('utf8');
   const password = decoded.split(':').slice(1).join(':');
   if (password === adminPass) return next();
-  res.set('WWW-Authenticate', 'Basic realm="Verbum9 Admin"');
+  res.set('WWW-Authenticate', 'Basic realm="9Boxes Admin"');
   res.status(401).send('Yetkisiz erişim.');
 }
 
@@ -416,7 +425,7 @@ app.get('/sozluk', requireAdmin, (req, res) => {
 <html lang="tr">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verbum9 Sözlüğü</title>
+  <title>9Boxes Sözlüğü</title>
   <style>
     body{font-family:'Segoe UI',sans-serif;background:#0f0e17;color:#fff;padding:20px}
     h1{color:#e94560;margin-bottom:4px} nav{margin-bottom:16px;font-size:.9rem}
@@ -429,7 +438,7 @@ app.get('/sozluk', requireAdmin, (req, res) => {
   </style>
 </head>
 <body>
-  <h1>Verbum9 Sözlüğü</h1>
+  <h1>9Boxes Sözlüğü</h1>
   <nav><a href="/">← Oyuna dön</a><a href="/admin">Admin →</a></nav>
   <input id="q" placeholder="Kelime ara..." oninput="filter()" autofocus>
   <div class="count" id="cnt">${sorted.length} kelime</div>
@@ -455,7 +464,7 @@ app.get('/admin', requireAdmin, (req, res) => {
 <html lang="tr">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verbum9 Admin</title>
+  <title>9Boxes Admin</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Segoe UI',sans-serif;background:#0f0e17;color:#fff;padding:24px;max-width:680px;margin:0 auto}
@@ -508,7 +517,7 @@ app.get('/admin', requireAdmin, (req, res) => {
   </style>
 </head>
 <body>
-  <h1>Verbum9 Admin</h1>
+  <h1>9Boxes Admin</h1>
   <nav><a href="/">← Oyuna dön</a><a href="/sozluk">Sözlük →</a></nav>
   <div id="msg"></div>
 
@@ -2188,7 +2197,7 @@ async function rebuildGroupRooms() {
 
 server.listen(PORT, () => {
   const ip = getLocalIP();
-  console.log(`\nVerbum9 çalışıyor → http://localhost:${PORT}`);
+  console.log(`\n9Boxes çalışıyor → http://localhost:${PORT}`);
   console.log(`Telefon / ağ      → http://${ip}:${PORT}`);
   console.log(`Sözlük            → http://localhost:${PORT}/sozluk`);
   console.log(`Admin             → http://localhost:${PORT}/admin\n`);

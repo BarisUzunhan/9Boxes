@@ -21,9 +21,23 @@ import {
   renderResult, toggleWordsPanel,
 } from './ui.js';
 
+// ─── Verbum9 → 9Boxes geçişi: eski localStorage anahtarlarını taşı ─────
+// (Tek seferlik; mevcut kullanıcıların oturumu ve tercihleri korunur.)
+(function migrateVerbum9Keys() {
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const oldKey = localStorage.key(i);
+    if (!oldKey || !oldKey.startsWith('verbum9_')) continue;
+    const newKey = '9boxes_' + oldKey.slice('verbum9_'.length);
+    if (localStorage.getItem(newKey) === null) {
+      localStorage.setItem(newKey, localStorage.getItem(oldKey));
+    }
+    localStorage.removeItem(oldKey);
+  }
+})();
+
 // ─── Kullanıcı oturumu ────────────────────────────────────────
 
-const TOKEN_KEY = 'verbum9_token';
+const TOKEN_KEY = '9boxes_token';
 let currentUser = null;
 
 // ─── Çok oyunculu durum ───────────────────────────────────────
@@ -108,20 +122,20 @@ function applyColorTheme(name) {
 }
 
 function loadSettings() {
-  const theme = localStorage.getItem('verbum9_theme') || 'dark';
+  const theme = localStorage.getItem('9boxes_theme') || 'dark';
   document.body.classList.toggle('light', theme === 'light');
   document.getElementById('btn-theme-dark').classList.toggle('active', theme !== 'light');
   document.getElementById('btn-theme-light').classList.toggle('active', theme === 'light');
 
   applyLang(localStorage.getItem('verbum_lang') || 'tr');
 
-  const color = localStorage.getItem('verbum9_color') || 'default';
+  const color = localStorage.getItem('9boxes_color') || 'default';
   applyColorTheme(color);
   document.querySelectorAll('[data-color]').forEach(b => {
     b.classList.toggle('active', b.dataset.color === color);
   });
 
-  const sound = localStorage.getItem('verbum9_sound');
+  const sound = localStorage.getItem('9boxes_sound');
   _soundEnabled = sound !== '0';
   setSoundEnabled(_soundEnabled);
   document.getElementById('setting-sound').checked = _soundEnabled;
@@ -318,7 +332,7 @@ function openSettings() {
   const isLight = document.body.classList.contains('light');
   document.getElementById('btn-theme-dark').classList.toggle('active', !isLight);
   document.getElementById('btn-theme-light').classList.toggle('active', isLight);
-  const color = localStorage.getItem('verbum9_color') || 'default';
+  const color = localStorage.getItem('9boxes_color') || 'default';
   document.querySelectorAll('[data-color]').forEach(b => {
     b.classList.toggle('active', b.dataset.color === color);
   });
@@ -353,7 +367,7 @@ function bindSettingsEvents() {
     btn.addEventListener('click', () => {
       const isLight = btn.dataset.mode === 'light';
       document.body.classList.toggle('light', isLight);
-      localStorage.setItem('verbum9_theme', isLight ? 'light' : 'dark');
+      localStorage.setItem('9boxes_theme', isLight ? 'light' : 'dark');
       document.getElementById('btn-theme-dark').classList.toggle('active', !isLight);
       document.getElementById('btn-theme-light').classList.toggle('active', isLight);
     });
@@ -364,7 +378,7 @@ function bindSettingsEvents() {
     btn.addEventListener('click', () => {
       const color = btn.dataset.color;
       applyColorTheme(color);
-      localStorage.setItem('verbum9_color', color);
+      localStorage.setItem('9boxes_color', color);
       document.querySelectorAll('[data-color]').forEach(b => {
         b.classList.toggle('active', b.dataset.color === color);
       });
@@ -375,7 +389,7 @@ function bindSettingsEvents() {
   document.getElementById('setting-sound').addEventListener('change', e => {
     _soundEnabled = e.target.checked;
     setSoundEnabled(_soundEnabled);
-    localStorage.setItem('verbum9_sound', _soundEnabled ? '1' : '0');
+    localStorage.setItem('9boxes_sound', _soundEnabled ? '1' : '0');
   });
 
   // Süre — sabit 2 dakika, butonlar pasif
@@ -593,9 +607,9 @@ function bindAuth() {
       socket.connect();
       renderLobby();
       showScreen('screen-lobby');
-      const isNewUser = localStorage.getItem('verbum9_new_user');
+      const isNewUser = localStorage.getItem('9boxes_new_user');
       if (isNewUser) {
-        localStorage.removeItem('verbum9_new_user');
+        localStorage.removeItem('9boxes_new_user');
         showLobbyTutorial();
       } else {
         startLobby();
@@ -622,7 +636,7 @@ function bindAuth() {
     btn.disabled = false;
     if (data.ok && data.pending) {
       _pendingUsername = username;
-      localStorage.setItem('verbum9_new_user', '1');
+      localStorage.setItem('9boxes_new_user', '1');
       showAuthPending(email);
       showLangConfirmModal();
     } else if (!data.ok) {
@@ -1034,7 +1048,7 @@ socket.on('hint_result', async ({ ok, pattern, error }) => {
 socket.on('duration_changed', ({ duration }) => {
   _gameDuration = duration;
   setGameDuration(duration);
-  localStorage.setItem('verbum9_duration', duration);
+  localStorage.setItem('9boxes_duration', duration);
   document.querySelectorAll('.duration-btn').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.dur) === duration);
   });

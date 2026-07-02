@@ -1,8 +1,8 @@
-# Verbum9 — Tasarım Dokümanı
+# 9Boxes — Tasarım Dokümanı
 
 ## Bağlam
 
-Verbum9, Türkçe odaklı bir online kelime yarışı oyunudur. Temel mekaniği: 3×3 (9 harfli) bir matrisi iki oyuncunun sırayla doldurması, ardından 3 dakika boyunca matristeki harflerle (kullanım sayısı kadar) sözlükte yer alan geçerli kelimeleri yazmaya çalışmasıdır. Karşı tarafta olmayan her kelime, harf sayısı kadar puan kazandırır.
+9Boxes, Türkçe odaklı bir online kelime yarışı oyunudur. Temel mekaniği: 3×3 (9 harfli) bir matrisi iki oyuncunun sırayla doldurması, ardından 3 dakika boyunca matristeki harflerle (kullanım sayısı kadar) sözlükte yer alan geçerli kelimeleri yazmaya çalışmasıdır. Karşı tarafta olmayan her kelime, harf sayısı kadar puan kazandırır.
 
 Dokümanda tanımlı geniş özellik kümesi: 1v1 online + tek oyunculu + sınıf modu (çoklu) + günlük oyun, hesap & sosyal giriş, arkadaş sistemi, ipucu, KL oyun parası, seviye sistemi, mesajlaşma, sözlük yönetimi/itiraz, admin panel, bot rakip.
 
@@ -140,7 +140,7 @@ chat_messages     (game_id, from_user, to_user, message_template_id, sent_at)
 ## Klasör Yapısı
 
 ```
-Verbum9/
+9Boxes/
 ├── client/
 │   ├── index.html
 │   ├── css/

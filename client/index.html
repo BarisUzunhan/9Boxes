@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Verbum9</title>
+  <title>9Boxes</title>
   <link rel="stylesheet" href="css/style.css?v=0.7">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,9 @@
   <div id="screen-auth" class="screen active">
     <div class="auth-card">
       <div class="auth-logo">
-        <span class="logo-verbum">VERBUM</span><span class="logo-9">9</span>
+        <span class="brand-logo lg" aria-label="9Boxes">
+          <span class="brand-box">9</span><span class="brand-box">B</span><span class="brand-box">O</span><span class="brand-box">X</span><span class="brand-box">E</span><span class="brand-box">S</span>
+        </span>
       </div>
       <div class="auth-lang-bar">
         <button class="auth-lang-btn" data-lang="tr">🇹🇷 TR</button>
@@ -103,7 +105,11 @@
   <!-- EKRAN: Ana Lobi -->
   <div id="screen-lobby" class="screen">
     <div class="lobby-header">
-      <div class="lobby-logo">VERBUM<span class="lobby-logo-9">9</span></div>
+      <div class="lobby-logo">
+        <span class="brand-logo sm" aria-label="9Boxes">
+          <span class="brand-box">9</span><span class="brand-box">B</span><span class="brand-box">O</span><span class="brand-box">X</span><span class="brand-box">E</span><span class="brand-box">S</span>
+        </span>
+      </div>
       <div class="lobby-header-right">
         <button class="lobby-user" id="btn-profile" aria-label="Profil">
           <div class="avatar-small" id="lobby-avatar">?</div>
@@ -171,6 +177,7 @@
     <div class="screen-nav">
       <button id="btn-exit-fill" class="btn-nav-home">Ana Sayfa</button>
       <div class="nav-user-group">
+        <span class="brand-box brand-mark" aria-hidden="true">9</span>
         <div id="fill-nav-avatar" class="nav-avatar-tiny">?</div>
         <button id="btn-settings-fill" class="btn-settings-icon" title="Ayarlar">⚙</button>
       </div>
@@ -215,6 +222,7 @@
         <span id="words-count-value" class="stat-value">0</span>
       </div>
       <div class="nav-user-group">
+        <span class="brand-box brand-mark" aria-hidden="true">9</span>
         <div id="game-nav-avatar" class="nav-avatar-tiny">?</div>
         <button id="btn-settings-game" class="btn-settings-icon" title="Ayarlar">⚙</button>
       </div>
@@ -258,6 +266,9 @@
   <!-- EKRAN: Sonuç -->
   <div id="screen-result" class="screen">
     <div class="result-content">
+      <span class="brand-logo sm result-brand" aria-label="9Boxes">
+        <span class="brand-box">9</span><span class="brand-box">B</span><span class="brand-box">O</span><span class="brand-box">X</span><span class="brand-box">E</span><span class="brand-box">S</span>
+      </span>
       <h2 data-i18n="result.title">Oyun Bitti!</h2>
       <div class="result-score">
         <div class="result-score-number" id="result-score-number">0</div>
@@ -311,7 +322,10 @@
   <div id="screen-daily-lobby" class="screen">
     <div class="friends-header">
       <button id="btn-daily-back" class="btn-nav-home" data-i18n="nav.back_main">← Ana Sayfa</button>
-      <h2 class="friends-title" data-i18n="daily.title">Günlük Oyun</h2>
+      <div class="friends-title-group">
+        <span class="brand-box brand-mark" aria-hidden="true">9</span>
+        <h2 class="friends-title" data-i18n="daily.title">Günlük Oyun</h2>
+      </div>
       <div style="width:80px"></div>
     </div>
     <div class="daily-lobby-body">
@@ -360,7 +374,10 @@
   <div id="screen-friends" class="screen">
     <div class="friends-header">
       <button id="btn-friends-back" class="btn-nav-home" data-i18n="nav.back_main">← Ana Sayfa</button>
-      <h2 class="friends-title" data-i18n="friends.title">Arkadaşlar</h2>
+      <div class="friends-title-group">
+        <span class="brand-box brand-mark" aria-hidden="true">9</span>
+        <h2 class="friends-title" data-i18n="friends.title">Arkadaşlar</h2>
+      </div>
       <div style="width:80px"></div>
     </div>
     <div class="friends-body">
@@ -588,7 +605,10 @@
   <div id="screen-multi-lobby" class="screen">
     <div class="friends-header">
       <button id="btn-multi-back" class="btn-nav-home" data-i18n="nav.back_main">← Ana Sayfa</button>
-      <h2 class="friends-title" data-i18n="multi.title">Çoklu Oyun</h2>
+      <div class="friends-title-group">
+        <span class="brand-box brand-mark" aria-hidden="true">9</span>
+        <h2 class="friends-title" data-i18n="multi.title">Çoklu Oyun</h2>
+      </div>
       <div style="width:80px"></div>
     </div>
     <div class="multi-lobby-body">
@@ -635,6 +655,7 @@
     <div class="screen-nav">
       <button id="btn-mh-close" class="btn-nav-home" data-i18n="multi.exit">← Çık</button>
       <div class="nav-user-group">
+        <span class="brand-box brand-mark" aria-hidden="true">9</span>
         <div id="mh-nav-avatar" class="nav-avatar-tiny">?</div>
       </div>
     </div>

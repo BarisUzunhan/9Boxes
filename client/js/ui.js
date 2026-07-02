@@ -10,7 +10,7 @@ export function showScreen(id) {
   const tut = document.getElementById('tut-overlay');
   if (tut && !tut.hidden) {
     tut.hidden = true;
-    ['lobby','fill','game','result'].forEach(k => localStorage.setItem(`verbum9_tut_${k}`, '1'));
+    ['lobby','fill','game','result'].forEach(k => localStorage.setItem(`9boxes_tut_${k}`, '1'));
   }
 }
 

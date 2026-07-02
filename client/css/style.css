@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────
-   VERBUM9 — Ana Stil Dosyası
+   9BOXES — Ana Stil Dosyası
    ────────────────────────────────────────── */
 
 *, *::before, *::after {
@@ -84,11 +84,40 @@ html, body {
   gap: 18px;
 }
 
-.auth-logo {
-  font-size: clamp(1.3rem, 5vw, 1.8rem);
-  font-weight: 900;
-  letter-spacing: -2px;
+/* ── 9BOXES MARKA LOGOSU ──────────────────── */
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.14em;
+  --box: 40px;
+}
+
+.brand-box {
+  width: var(--box);
+  height: var(--box);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--surface);
+  border-radius: 0.18em;
+  font-family: Consolas, 'Courier New', Courier, monospace;
+  font-weight: 700;
+  font-size: calc(var(--box) * 0.56);
   line-height: 1;
+}
+
+.brand-logo.lg { --box: clamp(38px, 11vw, 54px); }
+.brand-logo.sm { --box: clamp(20px, 5vw, 26px); }
+
+/* Tek kutulu kompakt işaret — dar başlıklarda tam logo yerine kullanılır */
+.brand-mark.brand-box { --box: 22px; }
+
+.auth-logo {
+  display: flex;
+  justify-content: center;
 }
 
 .auth-switch {
@@ -271,13 +300,8 @@ html, body {
 }
 
 .lobby-logo {
-  font-size: 1.3rem;
-  font-weight: 900;
-  letter-spacing: 1px;
-}
-
-.lobby-logo-9 {
-  color: var(--accent);
+  display: flex;
+  align-items: center;
 }
 
 .lobby-user {
@@ -415,28 +439,6 @@ html, body {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-}
-
-.logo {
-  font-size: clamp(3rem, 15vw, 6rem);
-  font-weight: 900;
-  letter-spacing: -2px;
-  line-height: 1;
-}
-
-.logo-verbum {
-  color: var(--text);
-}
-
-.logo-9 {
-  color: var(--accent);
-}
-
-.logo-sub {
-  color: var(--text-dim);
-  font-size: 1rem;
-  letter-spacing: 3px;
-  text-transform: uppercase;
 }
 
 /* ── DÜĞMELER ─────────────────────────────── */
@@ -1965,6 +1967,12 @@ html, body {
   padding: 16px 20px 8px;
 }
 
+.friends-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .friends-title {
   font-size: 1.2rem;
   font-weight: 700;
@@ -2906,11 +2914,13 @@ body.theme-crt-green .btn-primary {
 }
 body.theme-crt-green .btn-primary::before { content: '[ '; }
 body.theme-crt-green .btn-primary::after  { content: ' ]'; }
-body.theme-crt-green .auth-logo {
+body.theme-crt-green .brand-box {
+  background: transparent !important;
+  border: 2px solid #00e63b !important;
   color: #00e63b !important;
   -webkit-text-fill-color: #00e63b !important;
   text-shadow: 0 0 6px #00e63b, 0 0 14px rgba(0,230,59,0.45) !important;
-  letter-spacing: 10px !important;
+  box-shadow: 0 0 8px rgba(0,230,59,0.35) !important;
 }
 body.theme-crt-green .tile {
   text-shadow: 0 0 5px rgba(0,230,59,0.6);
@@ -2941,10 +2951,13 @@ body.theme-crt-green.light .btn-primary {
   color: #003d12 !important;
   box-shadow: 2px 2px 0 #003d12 !important;
 }
-body.theme-crt-green.light .auth-logo {
+body.theme-crt-green.light .brand-box {
+  background: transparent !important;
+  border: 2px solid #003d12 !important;
   color: #003d12 !important;
   -webkit-text-fill-color: #003d12 !important;
   text-shadow: none !important;
+  box-shadow: none !important;
 }
 body.theme-crt-green.light .tile { text-shadow: none; }
 
@@ -2997,11 +3010,13 @@ body.theme-crt-amber .btn-primary {
 }
 body.theme-crt-amber .btn-primary::before { content: '[ '; }
 body.theme-crt-amber .btn-primary::after  { content: ' ]'; }
-body.theme-crt-amber .auth-logo {
+body.theme-crt-amber .brand-box {
+  background: transparent !important;
+  border: 2px solid #e6a000 !important;
   color: #e6a000 !important;
   -webkit-text-fill-color: #e6a000 !important;
   text-shadow: 0 0 6px #e6a000, 0 0 14px rgba(230,160,0,0.45) !important;
-  letter-spacing: 10px !important;
+  box-shadow: 0 0 8px rgba(230,160,0,0.3) !important;
 }
 body.theme-crt-amber .tile {
   text-shadow: 0 0 5px rgba(230,160,0,0.6);
@@ -3032,10 +3047,13 @@ body.theme-crt-amber.light .btn-primary {
   color: #4a3000 !important;
   box-shadow: 2px 2px 0 #4a3000 !important;
 }
-body.theme-crt-amber.light .auth-logo {
+body.theme-crt-amber.light .brand-box {
+  background: transparent !important;
+  border: 2px solid #4a3000 !important;
   color: #4a3000 !important;
   -webkit-text-fill-color: #4a3000 !important;
   text-shadow: none !important;
+  box-shadow: none !important;
 }
 body.theme-crt-amber.light .tile { text-shadow: none; }
 
