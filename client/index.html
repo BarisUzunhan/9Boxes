@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>9Boxes</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css?v=0.7">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -371,31 +374,31 @@
   </div>
 
   <!-- EKRAN: Arkadaşlar -->
-  <div id="screen-friends" class="screen">
-    <div class="friends-header">
-      <button id="btn-friends-back" class="btn-nav-home" data-i18n="nav.back_main">← Ana Sayfa</button>
+  <div id="friends-popup" class="friends-popup" hidden>
+    <div class="friends-backdrop" id="friends-backdrop"></div>
+    <div class="friends-content">
+      <button id="btn-close-friends" class="settings-close">✕</button>
       <div class="friends-title-group">
         <span class="brand-box brand-mark" aria-hidden="true">9</span>
         <h2 class="friends-title" data-i18n="friends.title">Arkadaşlar</h2>
       </div>
-      <div style="width:80px"></div>
-    </div>
-    <div class="friends-body">
-      <div class="friends-search-bar">
-        <input id="friends-search-input" class="friends-search-input" data-i18n="friends.search_ph" data-i18n-attr="placeholder" placeholder="Kullanıcı adı ara..." autocomplete="off">
-        <button id="btn-friends-search" class="btn-friends-search" data-i18n="friends.search_btn">Ara</button>
-      </div>
-      <div id="friends-search-results" class="friends-section" hidden></div>
-      <div id="friends-requests-section" class="friends-section" hidden>
-        <div class="friends-section-title" id="friends-requests-title" data-i18n="friends.requests_title">Gelen İstekler <span id="friends-requests-badge" class="friends-badge"></span></div>
-        <div id="friends-requests-list"></div>
-      </div>
-      <div class="friends-section">
-        <div class="friends-section-title" id="friends-list-title" data-i18n="friends.list_title">Arkadaşlar <span id="friends-count-badge" class="friends-badge"></span></div>
-        <div id="friends-list"><div class="friends-empty" data-i18n="friends.empty">Henüz arkadaşın yok. Yukarıdan ara!</div></div>
-      </div>
-      <div class="friends-invite-email-bar">
-        <button id="btn-invite-by-email" class="btn-invite-email" data-i18n="friends.invite_btn">✉ E-posta ile Davet Et</button>
+      <div class="friends-body">
+        <div class="friends-search-bar">
+          <input id="friends-search-input" class="friends-search-input" data-i18n="friends.search_ph" data-i18n-attr="placeholder" placeholder="Kullanıcı adı ara..." autocomplete="off">
+          <button id="btn-friends-search" class="btn-friends-search" data-i18n="friends.search_btn">Ara</button>
+        </div>
+        <div id="friends-search-results" class="friends-section" hidden></div>
+        <div id="friends-requests-section" class="friends-section" hidden>
+          <div class="friends-section-title" id="friends-requests-title"><span data-i18n="friends.requests_title">Gelen İstekler</span> <span id="friends-requests-badge" class="friends-badge"></span></div>
+          <div id="friends-requests-list"></div>
+        </div>
+        <div class="friends-section">
+          <div class="friends-section-title" id="friends-list-title"><span data-i18n="friends.list_title">Arkadaşlar</span> <span id="friends-count-badge" class="friends-badge"></span></div>
+          <div id="friends-list"><div class="friends-empty" data-i18n="friends.empty">Henüz arkadaşın yok. Yukarıdan ara!</div></div>
+        </div>
+        <div class="friends-invite-email-bar">
+          <button id="btn-invite-by-email" class="btn-invite-email" data-i18n="friends.invite_btn">✉ E-posta ile Davet Et</button>
+        </div>
       </div>
     </div>
   </div>

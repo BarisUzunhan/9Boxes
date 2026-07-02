@@ -1751,13 +1751,18 @@ function bindProfile() {
 // ─── Arkadaşlar Ekranı ───────────────────────────────────────
 
 document.getElementById('btn-friends-lobby').addEventListener('click', openFriends);
-document.getElementById('btn-friends-back').addEventListener('click', () => showScreen('screen-lobby'));
+document.getElementById('btn-close-friends').addEventListener('click', closeFriends);
+document.getElementById('friends-backdrop').addEventListener('click', closeFriends);
 document.getElementById('btn-daily-back').addEventListener('click', () => showScreen('screen-lobby'));
 
 function openFriends() {
-  showScreen('screen-friends');
+  document.getElementById('friends-popup').hidden = false;
   loadFriends();
   loadFriendRequests();
+}
+
+function closeFriends() {
+  document.getElementById('friends-popup').hidden = true;
 }
 
 function formatLastSeen(lastSeen, online) {
@@ -1965,12 +1970,12 @@ socket.on('friend_invite_expired', ({ toUsername }) => {
 
 socket.on('friend_request_received', ({ fromUsername }) => {
   showToast(`${fromUsername} sana arkadaşlık isteği gönderdi.`, 6000);
-  if (document.getElementById('screen-friends').classList.contains('active')) loadFriendRequests();
+  if (!document.getElementById('friends-popup').hidden) loadFriendRequests();
 });
 
 socket.on('friend_request_accepted', ({ byUsername }) => {
   showToast(`${byUsername} arkadaşlık isteğini kabul etti!`, 5000);
-  if (document.getElementById('screen-friends').classList.contains('active')) loadFriends();
+  if (!document.getElementById('friends-popup').hidden) loadFriends();
 });
 
 // ─── Çoklu Mod (Grup Odası) ──────────────────────────────────

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <rect x="0" y="0" width="120" height="120" fill="#000000" rx="6"/>
+  <text x="60" y="60" text-anchor="middle" dominant-baseline="central"
+        font-family="Consolas,'Courier New',Courier,monospace" font-weight="700" font-size="68" fill="#ffffff">9</text>
+</svg>

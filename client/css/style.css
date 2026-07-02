@@ -1952,12 +1952,41 @@ html, body {
 }
 .btn-friends-icon:hover { background: rgba(255,255,255,.1); }
 
-#screen-friends {
+/* ── ARKADAŞLAR POP-UP'I (Ayarlar/Profil ile aynı kalıp) ──── */
+
+.friends-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.friends-popup[hidden] { display: none; }
+
+.friends-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.friends-content {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 22px;
+  padding: 28px 0 0;
+  width: min(440px, 92vw);
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  max-width: 520px;
-  margin: 0 auto;
+  animation: popupIn 0.2s ease;
+}
+
+.friends-content .friends-title-group {
+  justify-content: center;
+  padding: 0 24px 16px;
 }
 
 .friends-header {
@@ -2901,7 +2930,8 @@ body.theme-crt-green::before {
   z-index: 99998;
 }
 body.theme-crt-green .auth-card,
-body.theme-crt-green .settings-content {
+body.theme-crt-green .settings-content,
+body.theme-crt-green .friends-content {
   border: 2px solid #00e63b !important;
   box-shadow: 0 0 8px rgba(0,230,59,0.3), inset 0 0 25px rgba(0,230,59,0.03) !important;
 }
@@ -2941,7 +2971,8 @@ body.theme-crt-green.light {
 body.theme-crt-green.light::after,
 body.theme-crt-green.light::before { display: none; }
 body.theme-crt-green.light .auth-card,
-body.theme-crt-green.light .settings-content {
+body.theme-crt-green.light .settings-content,
+body.theme-crt-green.light .friends-content {
   border: 2px solid #003d12 !important;
   box-shadow: 3px 3px 0 #003d12 !important;
 }
@@ -2997,7 +3028,8 @@ body.theme-crt-amber::before {
   z-index: 99998;
 }
 body.theme-crt-amber .auth-card,
-body.theme-crt-amber .settings-content {
+body.theme-crt-amber .settings-content,
+body.theme-crt-amber .friends-content {
   border: 2px solid #e6a000 !important;
   box-shadow: 0 0 8px rgba(230,160,0,0.3), inset 0 0 25px rgba(230,160,0,0.03) !important;
 }
@@ -3037,7 +3069,8 @@ body.theme-crt-amber.light {
 body.theme-crt-amber.light::after,
 body.theme-crt-amber.light::before { display: none; }
 body.theme-crt-amber.light .auth-card,
-body.theme-crt-amber.light .settings-content {
+body.theme-crt-amber.light .settings-content,
+body.theme-crt-amber.light .friends-content {
   border: 2px solid #4a3000 !important;
   box-shadow: 3px 3px 0 #4a3000 !important;
 }
