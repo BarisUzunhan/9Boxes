@@ -63,6 +63,50 @@ export function getRandomLetter() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+// Sesli harf hiç yoksa 2 hücreye rastgele sesli, 6'dan fazlaysa fazlalıkları
+// rastgele sessiz harfle değiştirir. Matrisi yerinde günceller.
+// Sunucudaki (server/index.js) balanceMatrix fonksiyonuyla aynı algoritma —
+// biri istemci (tekli mod), diğeri sunucu (1v1 + grup) tarafında çalışır.
+export function balanceMatrix(matrix) {
+  const cfg = getActiveLangConfig();
+  return applyVowelBalance(matrix, cfg.vowels, cfg.letterPool);
+}
+
+function applyVowelBalance(matrix, vowelsArr, letterPool) {
+  const vowelsSet = new Set(vowelsArr);
+  const vowelPositions = [];
+  matrix.forEach((l, i) => { if (vowelsSet.has(l)) vowelPositions.push(i); });
+  const changed = [];
+
+  if (vowelPositions.length === 0) {
+    const positions = [...Array(matrix.length).keys()].sort(() => Math.random() - 0.5).slice(0, 2);
+    positions.forEach(pos => {
+      const v = vowelsArr[Math.floor(Math.random() * vowelsArr.length)];
+      matrix[pos] = v;
+      changed.push({ pos, letter: v, type: 'vowel-added' });
+    });
+  } else if (vowelPositions.length > 6) {
+    const excess = vowelPositions.length - 6;
+    const positions = [...vowelPositions].sort(() => Math.random() - 0.5).slice(0, excess);
+    positions.forEach(pos => {
+      const c = randomConsonant(letterPool, vowelsSet);
+      matrix[pos] = c;
+      changed.push({ pos, letter: c, type: 'vowel-removed' });
+    });
+  }
+  return { changed };
+}
+
+function randomConsonant(letterPool, vowelsSet) {
+  let letter;
+  let guard = 0;
+  do {
+    letter = letterPool[Math.floor(Math.random() * letterPool.length)];
+    guard++;
+  } while (vowelsSet.has(letter) && guard < 200);
+  return letter;
+}
+
 export function setFillLetter(pos, letter) {
   state.matrix[pos] = letter;
 }

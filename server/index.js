@@ -1272,12 +1272,17 @@ for (const [lang, cfg] of Object.entries(_langConfig)) {
     const dictPath = path.join(__dirname, '../data', cfg.wordsFile);
     const dictData = JSON.parse(fs.readFileSync(dictPath, 'utf8'));
     const locale = cfg.locale;
+    const vowelsSet = new Set(cfg.vowels);
+    // Sessiz harf üretimi (balanceMatrix) için sesli harfler ayıklanmış havuz
+    const consonantPool = cfg.letterPool.split('').filter(ch => !vowelsSet.has(ch)).join('') || cfg.letterPool;
     _wordSets[lang] = {
       wordSet:      new Set(dictData.words.map(w => w.toLocaleLowerCase(locale))),
       homophoneSet: new Set((dictData.homophones || []).map(w => w.toLocaleLowerCase(locale))),
       blacklistSet: new Set((dictData.blacklist  || []).map(w => w.toLocaleLowerCase(locale))),
-      vowels:    new Set(cfg.vowels),
+      vowels:    vowelsSet,
       vowelsArr: cfg.vowels,
+      letterPool: cfg.letterPool,
+      consonantPool,
       locale,
       minLength: cfg.minLength,
       nineLetterWords: dictData.words.filter(w => w.length === 9),
@@ -1345,24 +1350,55 @@ function createRoom(p1, p2, lang = 'tr') {
   p2.socket.emit('matched', { opponentName: p1.name, playerIndex: 1, turnIndex: 0, lang });
 }
 
-const VOWELS_SET = new Set(['A', 'E', 'I', 'İ', 'O', 'Ö', 'U', 'Ü']);
-const VOWELS_ARR = ['A', 'E', 'İ', 'I', 'O', 'U', 'Ö', 'Ü'];
+// Sesli harf hiç yoksa 2 hücreye rastgele sesli, 6'dan fazlaysa fazlalıkları
+// rastgele sessiz harfle değiştirir. Matrisi yerinde günceller.
+// İstemcideki (client/js/game.js) balanceMatrix fonksiyonuyla aynı algoritma —
+// biri sunucu (1v1 + grup), diğeri istemci (tekli mod) tarafında çalışır.
+function balanceMatrix(matrix, langSet) {
+  const vowelsSet = langSet.vowels;
+  const vowelPositions = [];
+  matrix.forEach((l, i) => { if (vowelsSet.has(l)) vowelPositions.push(i); });
+  const changed = [];
+
+  if (vowelPositions.length === 0) {
+    const positions = [...Array(matrix.length).keys()]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2);
+    positions.forEach(pos => {
+      const v = langSet.vowelsArr[Math.floor(Math.random() * langSet.vowelsArr.length)];
+      matrix[pos] = v;
+      changed.push({ pos, letter: v, type: 'vowel-added' });
+    });
+  } else if (vowelPositions.length > 6) {
+    const excess = vowelPositions.length - 6;
+    const positions = [...vowelPositions]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, excess);
+    positions.forEach(pos => {
+      const c = randomConsonant(langSet.consonantPool, vowelsSet);
+      matrix[pos] = c;
+      changed.push({ pos, letter: c, type: 'vowel-removed' });
+    });
+  }
+  return { changed };
+}
+
+function randomConsonant(pool, vowelsSet) {
+  let letter;
+  let guard = 0;
+  do {
+    letter = pool[Math.floor(Math.random() * pool.length)];
+    guard++;
+  } while (vowelsSet.has(letter) && guard < 200);
+  return letter;
+}
 
 function roomCountdown(room) {
   const langSet = _wordSets[room.lang] || _wordSets['tr'];
-  // Hiç sesli harf yoksa 2 rastgele sessiz harfi sesli harfle değiştir
-  const hasVowel = room.matrix.some(l => langSet.vowels.has(l));
-  console.log(`[roomCountdown] matris: [${room.matrix.join(',')}] | sesliHarf: ${hasVowel}`);
+  const { changed } = balanceMatrix(room.matrix, langSet);
+  console.log(`[roomCountdown] matris: [${room.matrix.join(',')}] | değişen: ${changed.length}`);
   let delay = 0;
-  if (!hasVowel) {
-    const positions = [...Array(9).keys()]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2);
-    const changed = positions.map(pos => {
-      const vowel = langSet.vowelsArr[Math.floor(Math.random() * langSet.vowelsArr.length)];
-      room.matrix[pos] = vowel;
-      return { pos, vowel };
-    });
+  if (changed.length > 0) {
     io.to(room.id).emit('matrix_fixed', { matrix: [...room.matrix], changed });
     delay = 3000;
   }
@@ -1795,26 +1831,44 @@ io.on('connection', socket => {
     room.duration = [120, 180, 240, 300].includes(duration) ? duration : 180;
     room.timeLeft = room.duration;
     room.status = 'playing';
+
+    const langSet = _wordSets[room.lang] || _wordSets['tr'];
+    const { changed } = balanceMatrix(room.matrix, langSet);
+    console.log(`[grp_start] matris: [${room.matrix.join(',')}] | değişen: ${changed.length}`);
+
     io.to(`grp_${code}`).emit('grp_started', { matrix: room.matrix, duration: room.duration });
+    if (changed.length > 0) {
+      io.to(`grp_${code}`).emit('grp_matrix_fixed', { changed });
+    }
     groupRoomStore.upsertRoom(room);
-    let n = 5;
-    io.to(`grp_${code}`).emit('grp_countdown', { n });
-    const cdInterval = setInterval(() => {
-      n--;
-      if (n <= 0) {
-        clearInterval(cdInterval);
-        io.to(`grp_${code}`).emit('grp_game_start');
-        room.timerInterval = setInterval(() => {
-          room.timeLeft--;
-          io.to(`grp_${code}`).emit('grp_timer_tick', { timeLeft: room.timeLeft });
-          // Her 15 saniyede bir skoru/kelimeleri kaydet (her kelimede yazmak yerine debounce)
-          if (room.timeLeft % 15 === 0) groupRoomStore.upsertRoom(room);
-          if (room.timeLeft <= 0) grpRoomEnd(room);
-        }, 1000);
-      } else {
-        io.to(`grp_${code}`).emit('grp_countdown', { n });
-      }
-    }, 1000);
+
+    const startCountdownSeq = () => {
+      let n = 5;
+      io.to(`grp_${code}`).emit('grp_countdown', { n });
+      const cdInterval = setInterval(() => {
+        n--;
+        if (n <= 0) {
+          clearInterval(cdInterval);
+          io.to(`grp_${code}`).emit('grp_game_start');
+          room.timerInterval = setInterval(() => {
+            room.timeLeft--;
+            io.to(`grp_${code}`).emit('grp_timer_tick', { timeLeft: room.timeLeft });
+            // Her 15 saniyede bir skoru/kelimeleri kaydet (her kelimede yazmak yerine debounce)
+            if (room.timeLeft % 15 === 0) groupRoomStore.upsertRoom(room);
+            if (room.timeLeft <= 0) grpRoomEnd(room);
+          }, 1000);
+        } else {
+          io.to(`grp_${code}`).emit('grp_countdown', { n });
+        }
+      }, 1000);
+    };
+
+    // Matris düzeltildiyse, 1v1 modundaki gibi popup görünsün diye geri sayımı 3sn geciktir
+    if (changed.length > 0) {
+      setTimeout(startCountdownSeq, 3000);
+    } else {
+      startCountdownSeq();
+    }
   });
 
   socket.on('grp_submit_word', ({ word }) => {

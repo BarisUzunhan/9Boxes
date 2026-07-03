@@ -3,7 +3,7 @@ import { t, applyLang, setI18nLang } from './i18n.js';
 import { init as initTutorial, startLobby, startFill, startGame as startGameTutorial, startResult, showLobbyTutorial, onEnd as onTutorialEnd, end as endTutorial } from './tutorial.js';
 import {
   state, PHASES,
-  getRandomLetter, setFillLetter,
+  getRandomLetter, setFillLetter, balanceMatrix,
   addLetterToWord, addLetterByChar, removeLastLetter, clearCurrentWord,
   submitCurrentWord, findMissedWords,
   startCountdown, startGame, stopGame, restartTimer, resetToFill,
@@ -1373,29 +1373,24 @@ function normalizeLetter(key) {
 function beginCountdown() {
   document.removeEventListener('keydown', onFillKeydown);
 
-  // Hiç sesli harf yoksa 2 rastgele sessiz harfi sesli harfle değiştir
-  const langCfg = getActiveLangConfig();
-  const vowelsSet = new Set(langCfg.vowels || ['A', 'E', 'I', 'İ', 'O', 'Ö', 'U', 'Ü']);
-  const vowelsArr = langCfg.vowels || ['A', 'E', 'İ', 'I', 'O', 'U', 'Ö', 'Ü'];
-  const hasVowel = state.matrix.some(l => vowelsSet.has(l));
-  if (!hasVowel) {
-    const positions = [...Array(9).keys()]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2);
-    const added = positions.map(pos => {
-      const v = vowelsArr[Math.floor(Math.random() * vowelsArr.length)];
-      setFillLetter(pos, v);
-      return v;
-    });
+  const { changed } = balanceMatrix(state.matrix);
+  if (changed.length > 0) {
     updateFillCell();
-    showVowelPopup(
-      `Tabloda hiç sesli harf yoktu. ${added[0]} ve ${added[1]} harfleri rastgele eklendi.`,
-      _startCountdown
-    );
+    showVowelPopup(vowelFixMessage(changed), _startCountdown);
     return;
   }
 
   _startCountdown();
+}
+
+// Sesli harf düzeltmesi sonrası gösterilecek popup metni — tekli, 1v1 ve
+// grup modlarının tümünde aynı mesaj formatı kullanılır.
+function vowelFixMessage(changed) {
+  const added = changed.filter(c => c.type === 'vowel-added');
+  if (added.length > 0) {
+    return `Tabloda hiç sesli harf yoktu. ${added.map(c => c.letter).join(' ve ')} harfleri rastgele eklendi.`;
+  }
+  return 'Tabloda çok fazla sesli harf vardı. Fazlalıklar rastgele sessiz harfle değiştirildi.';
 }
 
 function _startCountdown() {
@@ -1619,10 +1614,7 @@ socket.on('matrix_fixed', ({ matrix, changed }) => {
   if (state.phase === PHASES.FILL) {
     updateFillCell();
     if (changed && changed.length > 0) {
-      const [a, b] = changed.map(c => c.vowel);
-      showVowelPopup(
-        `Tabloda hiç sesli harf yoktu. ${a} ve ${b} harfleri rastgele eklendi.`
-      );
+      showVowelPopup(vowelFixMessage(changed));
       // countdown_tick 3 saniye sonra gelir; o zaman popup otomatik kapanır
     }
   }
@@ -2464,6 +2456,15 @@ socket.on('grp_started', ({ matrix, duration }) => {
   document.getElementById('result-words-section').hidden = false;
   showScreen('screen-game');
   showCountdownOverlay(true);
+});
+
+// Grup modu: matris sunucuda düzeltildiyse (hiç/çok fazla sesli harf) bilgi popup'ı göster.
+// state.matrix zaten grp_started ile düzeltilmiş halde geldi; burada sadece bildiriliyor.
+socket.on('grp_matrix_fixed', ({ changed }) => {
+  if (changed && changed.length > 0) {
+    showVowelPopup(vowelFixMessage(changed));
+    // grp_countdown 3 saniye sonra gelir; popup o zamana kadar açık kalır
+  }
 });
 
 socket.on('grp_rejoin_ok', ({ matrix, duration, timeLeft, score }) => {
