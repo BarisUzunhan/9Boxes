@@ -19,6 +19,7 @@ import {
   updateWordDisplay, showWordFeedback,
   updateTimer, updateScore, addWordToPanel,
   renderResult, toggleWordsPanel,
+  escapeHtml,
 } from './ui.js';
 
 // ─── Verbum9 → 9Boxes geçişi: eski localStorage anahtarlarını taşı ─────
@@ -245,7 +246,7 @@ function bindHintEvents() {
       const missed = findMissedWords();
       if (missed.length === 0) { showToast(t('toast.no_hint'), 3000); return; }
       const word = missed[Math.floor(Math.random() * Math.min(missed.length, 30))];
-      const wordU = word.toLocaleUpperCase('tr-TR');
+      const wordU = word.toLocaleUpperCase(getActiveLangConfig().locale);
       const positions = [...Array(wordU.length).keys()].sort(() => Math.random() - 0.5);
       const revealSet = new Set(positions.slice(0, 2));
       const pattern = [...wordU].map((ch, i) => revealSet.has(i) ? ch : null);
@@ -775,8 +776,8 @@ function startDailyGame(matrix) {
         document.getElementById('daily-result-banner').hidden = true;
         showScreen('screen-result');
         setTimeout(() => startResult(), 100);
-        const wordsFound = state.submittedWords.filter(w => w.valid).length;
-        const res = await apiFetch('POST', '/api/daily/submit', { score: state.score, wordsFound, lang: getActiveLang() });
+        const words = state.submittedWords.filter(w => w.valid).map(w => w.word);
+        const res = await apiFetch('POST', '/api/daily/submit', { words, lang: getActiveLang() });
         if (res.ok) {
           document.getElementById('daily-rank-number').textContent = `${res.currentRank}. sıra`;
           document.getElementById('daily-result-banner').hidden = false;
@@ -997,10 +998,13 @@ socket.on('game_over', async ({ players }) => {
   removeGameEvents();
   releaseWakeLock();
 
-  // Her iki oyuncunun bulduğu geçerli kelimeler
+  // Her iki oyuncunun bulduğu geçerli kelimeler — _findMissedForMatrix aktif dilin locale'ini
+  // kullanıyor, bu yüzden burada da aynı locale kullanılmalı (yoksa "I" içeren İngilizce
+  // kelimeler tr-TR/en-US uyuşmazlığı yüzünden bulunmuş olsa da "kaçırıldı" gösterilir).
+  const _locale = getActiveLangConfig().locale;
   const allFound = new Set([
-    ...players[0].words.map(w => w.word.toLocaleLowerCase('tr-TR')),
-    ...players[1].words.map(w => w.word.toLocaleLowerCase('tr-TR')),
+    ...players[0].words.map(w => w.word.toLocaleLowerCase(_locale)),
+    ...players[1].words.map(w => w.word.toLocaleLowerCase(_locale)),
   ]);
   const missed = _findMissedForMatrix(state.matrix, allFound);
 
@@ -1425,8 +1429,8 @@ function _startCountdown() {
         showScreen('screen-result');
         setTimeout(() => startResult(), 100);
         if (mode === 'daily') {
-          const wordsFound = state.submittedWords.filter(w => w.valid).length;
-          const data = await apiFetch('POST', '/api/daily/submit', { score: state.score, wordsFound, lang: getActiveLang() });
+          const words = state.submittedWords.filter(w => w.valid).map(w => w.word);
+          const data = await apiFetch('POST', '/api/daily/submit', { words, lang: getActiveLang() });
           if (data.ok) {
             document.getElementById('daily-rank-number').textContent = `${data.currentRank}. sıra`;
             document.getElementById('daily-result-banner').hidden = false;
@@ -1786,11 +1790,11 @@ async function loadFriends() {
   }
   list.innerHTML = friends.map(f => `
     <div class="friend-row" id="friend-row-${f.friendshipId}">
-      <div class="friend-avatar">${f.username[0].toLocaleUpperCase('tr-TR')}${f.online ? '<div class="online-dot"></div>' : ''}</div>
-      <div class="friend-name">${f.username}<br>${formatLastSeen(f.lastSeen, f.online)}</div>
+      <div class="friend-avatar">${escapeHtml(f.username[0].toLocaleUpperCase('tr-TR'))}${f.online ? '<div class="online-dot"></div>' : ''}</div>
+      <div class="friend-name">${escapeHtml(f.username)}<br>${formatLastSeen(f.lastSeen, f.online)}</div>
       <div class="friend-actions">
-        <button class="btn-friend-invite" ${!f.online ? 'disabled' : ''} onclick="inviteFriend(${f.userId}, '${f.username}')">${t('friends.invite_action')}</button>
-        <button class="btn-friend-remove" onclick="removeFriend(${f.friendshipId})">✕</button>
+        <button class="btn-friend-invite" ${!f.online ? 'disabled' : ''} data-action="invite-friend" data-user-id="${f.userId}" data-username="${escapeHtml(f.username)}">${t('friends.invite_action')}</button>
+        <button class="btn-friend-remove" data-action="remove-friend" data-friendship-id="${f.friendshipId}">✕</button>
       </div>
     </div>`).join('');
 }
@@ -1806,11 +1810,11 @@ async function loadFriendRequests() {
   badge.textContent = requests.length;
   list.innerHTML = requests.map(r => `
     <div class="friend-row" id="request-row-${r.id}">
-      <div class="friend-avatar">${r.username[0].toLocaleUpperCase('tr-TR')}</div>
-      <div class="friend-name">${r.username}</div>
+      <div class="friend-avatar">${escapeHtml(r.username[0].toLocaleUpperCase('tr-TR'))}</div>
+      <div class="friend-name">${escapeHtml(r.username)}</div>
       <div class="friend-actions">
-        <button class="btn-friend-accept" onclick="respondRequest(${r.id}, true)">${t('friends.accept')}</button>
-        <button class="btn-friend-reject" onclick="respondRequest(${r.id}, false)">${t('friends.reject')}</button>
+        <button class="btn-friend-accept" data-action="respond-request" data-request-id="${r.id}" data-accept="1">${t('friends.accept')}</button>
+        <button class="btn-friend-reject" data-action="respond-request" data-request-id="${r.id}" data-accept="0">${t('friends.reject')}</button>
       </div>
     </div>`).join('');
 }
@@ -1827,9 +1831,9 @@ async function searchFriends() {
     let actionBtn = '';
     if (u.friendStatus === 'friends') actionBtn = `<button class="btn-friend-pending" disabled>${t('friends.is_friend')}</button>`;
     else if (u.friendStatus === 'sent') actionBtn = `<button class="btn-friend-pending" disabled>${t('friends.request_sent')}</button>`;
-    else if (u.friendStatus === 'received') actionBtn = `<button class="btn-friend-accept" onclick="respondRequest(${u.friendshipId}, true)">${t('friends.accept')}</button>`;
-    else actionBtn = `<button class="btn-friend-invite" onclick="sendFriendRequest('${u.username}', this)">${t('friends.add')}</button>`;
-    return `<div class="friend-row"><div class="friend-avatar">${u.username[0].toLocaleUpperCase('tr-TR')}</div><div class="friend-name">${u.username}</div><div class="friend-actions">${actionBtn}</div></div>`;
+    else if (u.friendStatus === 'received') actionBtn = `<button class="btn-friend-accept" data-action="respond-request" data-request-id="${u.friendshipId}" data-accept="1">${t('friends.accept')}</button>`;
+    else actionBtn = `<button class="btn-friend-invite" data-action="send-request" data-username="${escapeHtml(u.username)}">${t('friends.add')}</button>`;
+    return `<div class="friend-row"><div class="friend-avatar">${escapeHtml(u.username[0].toLocaleUpperCase('tr-TR'))}</div><div class="friend-name">${escapeHtml(u.username)}</div><div class="friend-actions">${actionBtn}</div></div>`;
   }).join('');
 }
 
@@ -1862,14 +1866,26 @@ async function removeFriend(friendshipId) {
 document.getElementById('btn-friends-search').addEventListener('click', searchFriends);
 document.getElementById('friends-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchFriends(); });
 
-// inline onclick'ler module scope'u göremez, window'a bağla
-window.sendFriendRequest = sendFriendRequest;
-window.respondRequest    = respondRequest;
-window.removeFriend      = removeFriend;
-window.inviteFriend      = inviteFriend;
+// Arkadaş listesi/istekleri/arama sonuçları innerHTML ile yeniden çiziliyor; inline onclick
+// yerine event delegation kullanılıyor (kullanıcı adı gibi güvenilmeyen veriyi JS string'i
+// olarak enjekte etmeden butonlara data-* attribute ile bağlamak için — bkz. escapeHtml).
+function _bindFriendActions(containerId) {
+  document.getElementById(containerId).addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const { action } = btn.dataset;
+    if (action === 'invite-friend') inviteFriend(Number(btn.dataset.userId), btn.dataset.username);
+    else if (action === 'remove-friend') removeFriend(Number(btn.dataset.friendshipId));
+    else if (action === 'respond-request') respondRequest(Number(btn.dataset.requestId), btn.dataset.accept === '1');
+    else if (action === 'send-request') sendFriendRequest(btn.dataset.username, btn);
+  });
+}
+_bindFriendActions('friends-list');
+_bindFriendActions('friends-requests-list');
+_bindFriendActions('friends-search-results');
 
 function inviteFriend(userId, username) {
-  socket.emit('friend_invite', { toUserId: userId });
+  socket.emit('friend_invite', { toUserId: userId, lang: getActiveLang() });
   showToast(`${username} adlı oyuncuya davet gönderildi (30 sn)`);
 }
 
@@ -2123,7 +2139,7 @@ function setupHostScreen(code) {
 
   // Oyuncular listesi
   const playersList = document.getElementById('mh-players-list');
-  playersList.innerHTML = `<div class="mh-player-row"><span class="mh-player-name">${currentUser?.username || 'Sen'}</span><span class="mh-player-badge">Oda Sahibi</span></div>`;
+  playersList.innerHTML = `<div class="mh-player-row"><span class="mh-player-name">${escapeHtml(currentUser?.username || 'Sen')}</span><span class="mh-player-badge">Oda Sahibi</span></div>`;
   document.getElementById('mh-player-count').textContent = '1';
   document.getElementById('mh-pending-section').hidden = true;
 
@@ -2401,14 +2417,14 @@ socket.on('grp_players_update', ({ players }) => {
   if (document.getElementById('screen-multi-host').classList.contains('active')) {
     const list = document.getElementById('mh-players-list');
     list.innerHTML = players.map((p, i) =>
-      `<div class="mh-player-row"><span class="mh-player-name">${p.displayName}</span>${i === 0 ? '<span class="mh-player-badge">Oda Sahibi</span>' : ''}</div>`
+      `<div class="mh-player-row"><span class="mh-player-name">${escapeHtml(p.displayName)}</span>${i === 0 ? '<span class="mh-player-badge">Oda Sahibi</span>' : ''}</div>`
     ).join('');
     document.getElementById('mh-player-count').textContent = players.length;
   }
   // Bekleme ekranı
   if (document.getElementById('screen-multi-wait').classList.contains('active')) {
     const list = document.getElementById('mw-players-list');
-    list.innerHTML = players.map(p => `<div class="mw-player-chip">${p.displayName}</div>`).join('');
+    list.innerHTML = players.map(p => `<div class="mw-player-chip">${escapeHtml(p.displayName)}</div>`).join('');
   }
 });
 
@@ -2419,7 +2435,7 @@ socket.on('grp_join_request', ({ socketId, displayName }) => {
   const row = document.createElement('div');
   row.className = 'mh-pending-row';
   row.id = `pending-${socketId}`;
-  row.innerHTML = `<span class="mh-player-name">${displayName}</span>
+  row.innerHTML = `<span class="mh-player-name">${escapeHtml(displayName)}</span>
     <div class="mh-pending-actions">
       <button class="btn-grp-accept" onclick="grpApprove('${socketId}', true)">✓ Kabul</button>
       <button class="btn-grp-reject" onclick="grpApprove('${socketId}', false)">✕ Reddet</button>
@@ -2550,7 +2566,7 @@ function renderGroupResult(rankings, words, missed = []) {
   rankingsEl.innerHTML = rankings.map((p, i) =>
     `<div class="grp-rank-row rank-${Math.min(i + 1, 4)}">
       <span class="grp-rank-badge">${medals[i] || (i + 1) + '.'}</span>
-      <span class="grp-rank-name">${p.displayName}</span>
+      <span class="grp-rank-name">${escapeHtml(p.displayName)}</span>
       <span class="grp-rank-score">${p.score} puan</span>
     </div>`
   ).join('');

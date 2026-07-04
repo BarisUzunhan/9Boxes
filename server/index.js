@@ -589,6 +589,12 @@ app.get('/admin', requireAdmin, (req, res) => {
   </div>
 
   <script>
+    // Kelime içerikleri sunucuda harf-only olarak doğrulanıyor (bkz. POST /api/disputes),
+    // ama savunma derinliği için render öncesi yine de escape ediliyor.
+    function escHtml(str) {
+      const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+      return String(str == null ? '' : str).replace(/[&<>"']/g, ch => map[ch]);
+    }
     function showMsg(text, ok) {
       const el = document.getElementById('msg');
       el.className = 'msg ' + (ok ? 'ok' : 'err');
@@ -655,7 +661,7 @@ app.get('/admin', requireAdmin, (req, res) => {
       list.innerHTML = pending.map(d => {
         const date = new Date(d.createdAt).toLocaleDateString('tr-TR');
         return '<div class="word-row" id="dispute-row-'+d.id+'">'+
-          '<span class="word-text">'+d.word+'<span class="badge badge-dispute">İtiraz</span>'+
+          '<span class="word-text">'+escHtml(d.word)+'<span class="badge badge-dispute">İtiraz</span>'+
           '<span class="dispute-date">'+date+'</span></span>'+
           '<div class="row-actions">'+
           '<button class="btn-approve" onclick="openApproveModal('+d.id+',\\''+d.word+'\\')">✓ Onayla</button>'+
@@ -859,11 +865,14 @@ app.get('/api/disputes', async (req, res) => {
 
 // ─── İtiraz API: yeni itiraz ──────────────────────────────────
 
-app.post('/api/disputes', async (req, res) => {
+app.post('/api/disputes', requireAuth, async (req, res) => {
   const { word } = req.body;
   if (!word || typeof word !== 'string') return res.json({ ok: false, error: 'Geçersiz kelime.' });
   const normalized = word.trim().toLocaleLowerCase('tr-TR');
   if (!normalized) return res.json({ ok: false, error: 'Boş kelime.' });
+  // Bir itiraz kelimesi sadece harflerden oluşabilir — bu hem doğruluk hem güvenlik kısıtı
+  // (HTML/script içeren bir "kelime" admin panelinde render edilmeden reddedilir).
+  if (!/^[a-zçğıiöşü]+$/.test(normalized)) return res.json({ ok: false, error: 'Kelime sadece harflerden oluşmalı.' });
 
   const { data: existing } = await supabase
     .from('disputes').select('id,status').eq('word', normalized).in('status', ['pending', 'rejected']).maybeSingle();
@@ -916,6 +925,9 @@ app.post('/api/auth/register', async (req, res) => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return res.json({ ok: false, error: 'Geçerli bir e-posta adresi gir.' });
     if (username.trim().length < 3) return res.json({ ok: false, error: 'Kullanıcı adı en az 3 karakter olmalı.' });
+    // XSS'e karşı savunma derinliği: kullanıcı adı HTML'e zararsız karakterlerle sınırlı olsun.
+    if (!/^[a-zA-Z0-9çÇğĞıİöÖşŞüÜ_ ]+$/.test(username.trim()))
+      return res.json({ ok: false, error: 'Kullanıcı adı sadece harf, rakam, alt çizgi ve boşluk içerebilir.' });
     if (password.length < 6) return res.json({ ok: false, error: 'Şifre en az 6 karakter olmalı.' });
 
     const existing = await userService.getUserByUsername(username);
@@ -1191,16 +1203,35 @@ app.get('/api/daily', requireAuth, async (req, res) => {
 
 app.post('/api/daily/submit', requireAuth, async (req, res) => {
   const today = getDailyDate();
-  const { score, wordsFound, lang: reqLang } = req.body;
+  const { words, lang: reqLang } = req.body;
   const lang = (_wordSets[reqLang] ? reqLang : null) || 'tr';
 
   const { data: existing } = await supabase.from('daily_scores')
     .select('id').eq('user_id', req.user.id).eq('date', today).eq('lang', lang).maybeSingle();
   if (existing) return res.json({ ok: false, error: 'Zaten oynadın.' });
 
+  // Skor istemciden alınmıyor — her kelime günün bulmacasına karşı sunucuda yeniden
+  // doğrulanıp puan sunucu tarafından hesaplanıyor (client-trusted skor KL/liderlik
+  // tablosu sahteciliğine açıktı).
+  const puzzle = await getTodayPuzzle(lang);
+  const langSet = _wordSets[lang] || _wordSets['tr'];
+  const seen = [];
+  let score = 0, wordsFound = 0;
+  if (Array.isArray(words)) {
+    for (const raw of words) {
+      if (typeof raw !== 'string') continue;
+      const result = validateWordCore(puzzle.matrix, langSet, seen, raw);
+      if (result.status === 'valid') {
+        seen.push(result.word);
+        score += result.points;
+        wordsFound++;
+      }
+    }
+  }
+
   await supabase.from('daily_scores').insert({
     user_id: req.user.id, date: today, lang,
-    score: score || 0, words_found: wordsFound || 0,
+    score, words_found: wordsFound,
   });
 
   const { count } = await supabase.from('daily_scores')
@@ -1474,25 +1505,32 @@ async function roomEnd(room) {
   rooms.delete(room.id);
 }
 
-function validateWord(room, pIdx, rawWord) {
-  const langSet = _wordSets[room.lang] || _wordSets['tr'];
+// Ortak kelime doğrulama çekirdeği — 1v1 (validateWord) ve günlük mod (/api/daily/submit)
+// tarafından paylaşılır. `existingWords`: bu oturumda zaten kabul edilmiş kelimelerin
+// (büyük harfli) düz string dizisi — tekrar/homofon sınırı bunun üzerinden hesaplanır.
+function validateWordCore(matrix, langSet, existingWords, rawWord) {
   const locale = langSet.locale;
   const wordU = (rawWord || '').toLocaleUpperCase(locale);
   const wordL = wordU.toLocaleLowerCase(locale);
   if (wordU.length < langSet.minLength) return { status: 'short', word: wordU, points: 0 };
   const mc = {};
-  room.matrix.forEach(l => { mc[l] = (mc[l] || 0) + 1; });
+  matrix.forEach(l => { mc[l] = (mc[l] || 0) + 1; });
   const need = {};
   for (const ch of wordU) need[ch] = (need[ch] || 0) + 1;
   for (const ch in need) {
     if ((mc[ch] || 0) < need[ch]) return { status: 'invalid', word: wordU, points: 0 };
   }
   if (!langSet.wordSet.has(wordL) || langSet.blacklistSet.has(wordL)) return { status: 'invalid', word: wordU, points: 0 };
-  const pw = room.words[pIdx];
-  const cnt = pw.filter(w => w.word === wordU).length;
+  const cnt = existingWords.filter(w => w === wordU).length;
   const max = langSet.homophoneSet.has(wordL) ? 2 : 1;
   if (cnt >= max) return { status: 'duplicate', word: wordU, points: 0 };
   return { status: 'valid', word: wordU, points: wordU.length };
+}
+
+function validateWord(room, pIdx, rawWord) {
+  const langSet = _wordSets[room.lang] || _wordSets['tr'];
+  const existingWords = room.words[pIdx].map(w => w.word);
+  return validateWordCore(room.matrix, langSet, existingWords, rawWord);
 }
 
 function genGroupCode() {
@@ -1623,7 +1661,7 @@ io.on('connection', socket => {
   }
 
   // ─── Arkadaş Oyun Daveti ────────────────────────────────────
-  socket.on('friend_invite', async ({ toUserId }) => {
+  socket.on('friend_invite', async ({ toUserId, lang }) => {
     if (socketRoom.has(socket.id)) return socket.emit('friend_invite_result', { ok: false, error: 'Zaten bir oyundasınız.' });
     const fromUser = await userService.getUserByToken(authToken);
     if (!fromUser) return;
@@ -1631,7 +1669,8 @@ io.on('connection', socket => {
     if (!target) return socket.emit('friend_invite_result', { ok: false, error: 'Arkadaş şu an çevrimiçi değil.' });
     if (socketRoom.has(target.socket.id)) return socket.emit('friend_invite_result', { ok: false, error: 'Arkadaş şu an başka bir oyunda.' });
     const inviteId = Date.now();
-    pendingInvites.set(inviteId, { fromSocket: socket, fromName: fromUser.username, fromToken: authToken, toUserId });
+    const gameLang = _wordSets[lang] ? lang : 'tr';
+    pendingInvites.set(inviteId, { fromSocket: socket, fromName: fromUser.username, fromToken: authToken, toUserId, lang: gameLang });
     target.socket.emit('friend_invite_received', { inviteId, fromUsername: fromUser.username });
     socket.emit('friend_invite_result', { ok: true, inviteId, toUsername: target.name });
     setTimeout(() => {
@@ -1652,9 +1691,17 @@ io.on('connection', socket => {
     const fromUser = await userService.getUserByToken(invite.fromToken);
     const toUser   = await userService.getUserByToken(authToken);
     if (!fromUser || !toUser) return;
+    // Davet gönderildikten sonra (30 sn içinde) taraflardan biri başka bir yolla (örn.
+    // eşleştirme kuyruğu) bir odaya girmiş olabilir — bu durumda yeni oda kurmak o odayı
+    // sahipsiz bırakır (socketRoom haritası üzerine yazılır, eski oda sızıntı yapar).
+    if (socketRoom.has(invite.fromSocket.id) || socketRoom.has(socket.id)) {
+      try { invite.fromSocket.emit('friend_invite_declined', { username: toUser.username, reason: 'busy' }); } catch {}
+      return;
+    }
     createRoom(
       { socket: invite.fromSocket, name: fromUser.username, token: invite.fromToken },
-      { socket, name: toUser.username, token: authToken }
+      { socket, name: toUser.username, token: authToken },
+      invite.lang
     );
   });
 
@@ -1727,6 +1774,10 @@ io.on('connection', socket => {
         matrix: [], duration: 180, status: 'lobby', joinMode: 'open',
         players: [{ socket, userId: user.id, username: user.username, displayName: name, words: [], score: 0 }],
         pendingPlayers: [], timerInterval: null, timeLeft: 180,
+        // Host'un doğrudan davet ettiği kullanıcı ID'leri — 'open' modda bile onaysız
+        // katılabilirler (host zaten onları seçerek onaylamış sayılır). Kalıcı değildir
+        // (sunucu yeniden başlarsa sıfırlanır), yalnızca bellek içi bir kolaylıktır.
+        invitedUserIds: new Set(),
       };
       groupRooms.set(code, room);
       socketGroupRoom.set(socket.id, code);
@@ -1762,7 +1813,11 @@ io.on('connection', socket => {
     let sent = 0;
     for (const fid of (friendIds || [])) {
       const target = onlineUsers.get(String(fid));
-      if (target) { target.socket.emit('grp_friend_invite', { code, fromName: fromUser.username }); sent++; }
+      if (target) {
+        room.invitedUserIds?.add(String(fid));
+        target.socket.emit('grp_friend_invite', { code, fromName: fromUser.username });
+        sent++;
+      }
     }
     socket.emit('grp_invites_sent', { count: sent });
   });
@@ -1773,6 +1828,12 @@ io.on('connection', socket => {
     if (!authToken) return socket.emit('grp_join_error', { error: 'Giriş gerekli.' });
     const user = await userService.getUserByToken(authToken);
     if (!user) return socket.emit('grp_join_error', { error: 'Giriş gerekli.' });
+    // 'open' modundaki odalar herkese açık listede (GET /api/group/open) yayınlandığı için
+    // kod artık "gizli" sayılmaz — bu odalara sadece onay akışıyla (grp_request_join)
+    // girilebilir. Doğrudan kod girişi 'code' modunda (özel/davetli oda) VEYA host'un bu
+    // kullanıcıyı özel olarak davet ettiği durumda (grp_invite_friends) geçerli.
+    if (room.joinMode !== 'code' && !room.invitedUserIds?.has(String(user.id)))
+      return socket.emit('grp_join_error', { error: 'Bu odaya onay gerekiyor.' });
     if (room.players.some(p => p.userId === user.id)) return socket.emit('grp_join_error', { error: 'Zaten odadasın.' });
     const playerData = { socket, userId: user.id, username: user.username, displayName: user.username, words: [], score: 0 };
     room.players.push(playerData);
@@ -1876,7 +1937,7 @@ io.on('connection', socket => {
     if (!code) return;
     const room = groupRooms.get(code);
     if (!room || room.status !== 'playing') return;
-    const player = room.players.find(p => p.socket.id === socket.id);
+    const player = room.players.find(p => p.socket?.id === socket.id);
     if (!player) return;
     const langSet = _wordSets[room.lang] || _wordSets['tr'];
     const locale = langSet.locale;
@@ -2008,6 +2069,7 @@ io.on('connection', socket => {
     const room = rooms.get(roomId);
     if (!room || room.phase !== 'playing') return;
     const pIdx = room.players.findIndex(s => s.id === socket.id);
+    if (pIdx === -1) return;
     const result = validateWord(room, pIdx, word);
     socket.emit('word_result', result);
     if (result.status === 'valid') room.words[pIdx].push({ word: result.word, points: result.points });
@@ -2227,6 +2289,7 @@ async function rebuildGroupRooms() {
         })),
         pendingPlayers: [],
         timerInterval: null,
+        invitedUserIds: new Set(),
       };
       groupRooms.set(row.code, room);
       // userGroupRoom: grp_check_active ve grp_rejoin'in çalışması için kritik

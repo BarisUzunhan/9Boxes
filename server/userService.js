@@ -121,7 +121,10 @@ async function setVerificationToken(userId, token) {
 }
 
 async function getUserByUsername(username) {
-  const norm = (username || '').trim().toLocaleLowerCase('tr-TR');
+  // Kullanıcı adı doğal dil metni değil, ASCII kimlik olarak ele alınır — 'tr-TR' ile
+  // küçültmek (I → ı) Postgres ILIKE'ın kendi (Türkçe olmayan) case-fold'uyla uyuşmuyordu
+  // ve büyük "I" içeren kullanıcı adlarında kalıcı giriş kilidine yol açıyordu.
+  const norm = (username || '').trim().toLowerCase();
   const { data } = await supabase
     .from('users').select('*').ilike('username', norm).maybeSingle();
   return fromDB(data);
@@ -162,20 +165,31 @@ async function createUser(userData) {
 }
 
 async function updateUserToken(id, token) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('users').update({ token }).eq('id', id).select().single();
+  if (error) throw error;
   return fromDB(data);
 }
 
+// CAS (compare-and-swap) ile okuma-hesaplama-yazma yarışını önler: güncelleme, okunan eski
+// değerle eşleşme koşuluyla gönderilir; araya başka bir yazma girmişse eşleşme olmaz ve
+// birkaç kez yeniden denenir. Şema/migration gerektirmez.
+const CAS_MAX_ATTEMPTS = 5;
+
 async function deductKL(token, amount) {
   if (!token) return null;
-  const user = await getUserByToken(token);
-  if (!user || (user.klBalance || 0) < amount) return null;
-  const { data } = await supabase
-    .from('users')
-    .update({ kl_balance: user.klBalance - amount })
-    .eq('id', user.id).select().single();
-  return safeUser(fromDB(data));
+  for (let attempt = 0; attempt < CAS_MAX_ATTEMPTS; attempt++) {
+    const user = await getUserByToken(token);
+    if (!user || (user.klBalance || 0) < amount) return null;
+    const { data } = await supabase
+      .from('users')
+      .update({ kl_balance: user.klBalance - amount })
+      .eq('id', user.id).eq('kl_balance', user.klBalance)
+      .select().maybeSingle();
+    if (data) return safeUser(fromDB(data));
+    // eşleşme olmadı: araya başka bir yazma girdi, güncel bakiyeyle tekrar dene
+  }
+  return null;
 }
 
 async function updateLastSeen(userId) {
@@ -185,21 +199,28 @@ async function updateLastSeen(userId) {
 
 async function recordGameResult(token, { scoreDelta, won }) {
   if (!token) return null;
-  const user = await getUserByToken(token);
-  if (!user) return null;
-
-  const newScore = (user.totalScore || 0) + scoreDelta;
-  const { data } = await supabase
-    .from('users')
-    .update({
-      total_score:  newScore,
-      kl_balance:   (user.klBalance  || 0) + scoreDelta,
-      games_played: (user.gamesPlayed || 0) + 1,
-      games_won:    (user.gamesWon    || 0) + (won ? 1 : 0),
-      level:        calcLevel(newScore),
-    })
-    .eq('id', user.id).select().single();
-  return safeUser(fromDB(data));
+  for (let attempt = 0; attempt < CAS_MAX_ATTEMPTS; attempt++) {
+    const user = await getUserByToken(token);
+    if (!user) return null;
+    const newScore = (user.totalScore || 0) + scoreDelta;
+    const { data } = await supabase
+      .from('users')
+      .update({
+        total_score:  newScore,
+        kl_balance:   (user.klBalance  || 0) + scoreDelta,
+        games_played: (user.gamesPlayed || 0) + 1,
+        games_won:    (user.gamesWon    || 0) + (won ? 1 : 0),
+        level:        calcLevel(newScore),
+      })
+      .eq('id', user.id)
+      .eq('total_score', user.totalScore || 0)
+      .eq('kl_balance', user.klBalance || 0)
+      .eq('games_played', user.gamesPlayed || 0)
+      .select().maybeSingle();
+    if (data) return safeUser(fromDB(data));
+    // eşleşme olmadı: araya başka bir yazma girdi, güncel değerlerle tekrar dene
+  }
+  return null;
 }
 
 // ─── Dışa aktarım ────────────────────────────────────────────────

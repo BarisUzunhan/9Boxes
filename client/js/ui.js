@@ -1,6 +1,14 @@
 import { state, formatTime, matrixComplete, getActiveLangConfig } from './game.js';
 import { t } from './i18n.js';
 
+// ─── Güvenlik: kullanıcı içerikli metni HTML'e güvenli basma ──
+// Kullanıcı adı/görünen ad gibi güvenilmeyen string'leri innerHTML içine
+// koymadan önce buradan geçir (stored XSS'i önler).
+const _escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+export function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, ch => _escapeMap[ch]);
+}
+
 // ─── Ekran geçişi ────────────────────────────────────────────
 
 export function showScreen(id) {
