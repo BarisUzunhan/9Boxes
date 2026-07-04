@@ -197,6 +197,29 @@ async function updateLastSeen(userId) {
   await supabase.from('users').update({ last_seen: new Date().toISOString() }).eq('id', userId);
 }
 
+async function getUserById(id) {
+  const { data } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
+  return fromDB(data);
+}
+
+// Günlük mod ödülleri (cron /api/daily/finalize) gibi token yerine user_id ile çalışan
+// KL kazandırma akışları için — deductKL'daki aynı CAS deseniyle yarış durumunu önler.
+async function creditKL(userId, amount) {
+  for (let attempt = 0; attempt < CAS_MAX_ATTEMPTS; attempt++) {
+    const user = await getUserById(userId);
+    if (!user) return null;
+    const currentBalance = user.klBalance || 0;
+    const { data } = await supabase
+      .from('users')
+      .update({ kl_balance: currentBalance + amount })
+      .eq('id', userId).eq('kl_balance', currentBalance)
+      .select().maybeSingle();
+    if (data) return safeUser(fromDB(data));
+    // eşleşme olmadı: araya başka bir yazma girdi, güncel bakiyeyle tekrar dene
+  }
+  return null;
+}
+
 async function recordGameResult(token, { scoreDelta, won }) {
   if (!token) return null;
   for (let attempt = 0; attempt < CAS_MAX_ATTEMPTS; attempt++) {
@@ -238,6 +261,7 @@ module.exports = {
   setVerificationToken,
   resetPassword,
   deductKL,
+  creditKL,
   recordGameResult,
   updateLastSeen,
 };

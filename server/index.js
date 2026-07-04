@@ -28,12 +28,46 @@ function brandLogoEmailHtml() {
     .map(l => `<span style="${boxStyle}">${l}</span>`).join('')}</div>`;
 }
 
+// Brevo transactional e-posta gönderimi — üç e-posta fonksiyonu (doğrulama, şifre
+// sıfırlama, davet) bu tek HTTPS isteğini paylaşır; yalnızca içerik farklıdır.
+async function sendBrevoEmail({ to, subject, htmlContent, senderEmail }) {
+  const body = JSON.stringify({
+    sender:      { name: '9Boxes', email: senderEmail || process.env.BREVO_SENDER_EMAIL || to },
+    to:          [{ email: to }],
+    subject,
+    htmlContent,
+  });
+
+  await new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.brevo.com',
+      path:     '/v3/smtp/email',
+      method:   'POST',
+      headers:  {
+        'accept':         'application/json',
+        'api-key':        (process.env.BREVO_API_KEY || '').trim(),
+        'content-type':   'application/json',
+        'content-length': String(Buffer.byteLength(body)),
+      },
+    }, res => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve();
+        else reject(new Error(`Brevo ${res.statusCode}: ${data}`));
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 async function sendVerificationEmail(to, token, username = '') {
   const link = `${APP_URL}/verify-email?token=${token}`;
-  const body = JSON.stringify({
-    sender:      { name: '9Boxes', email: process.env.BREVO_SENDER_EMAIL || to },
-    to:          [{ email: to }],
-    subject:     '9Boxes — E-posta Adresini Doğrula',
+  await sendBrevoEmail({
+    to,
+    subject: '9Boxes — E-posta Adresini Doğrula',
     htmlContent: `
       <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px;background:#0f0e17;color:#fff;border-radius:16px">
         ${brandLogoEmailHtml()}
@@ -53,38 +87,13 @@ async function sendVerificationEmail(to, token, username = '') {
       </div>
     `,
   });
-
-  await new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'api.brevo.com',
-      path:     '/v3/smtp/email',
-      method:   'POST',
-      headers:  {
-        'accept':       'application/json',
-        'api-key':      (process.env.BREVO_API_KEY || '').trim(),
-        'content-type': 'application/json',
-        'content-length': String(Buffer.byteLength(body)),
-      },
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) resolve();
-        else reject(new Error(`Brevo ${res.statusCode}: ${data}`));
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
 }
 
 async function sendPasswordResetEmail(to, token, username) {
   const link = `${APP_URL}/reset-password?token=${token}`;
-  const body = JSON.stringify({
-    sender:      { name: '9Boxes', email: process.env.BREVO_SENDER_EMAIL || to },
-    to:          [{ email: to }],
-    subject:     '9Boxes — Şifre Sıfırlama',
+  await sendBrevoEmail({
+    to,
+    subject: '9Boxes — Şifre Sıfırlama',
     htmlContent: `
       <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px;background:#0f0e17;color:#fff;border-radius:16px">
         ${brandLogoEmailHtml()}
@@ -106,30 +115,6 @@ async function sendPasswordResetEmail(to, token, username) {
       </div>
     `,
   });
-
-  await new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'api.brevo.com',
-      path:     '/v3/smtp/email',
-      method:   'POST',
-      headers:  {
-        'accept':         'application/json',
-        'api-key':        (process.env.BREVO_API_KEY || '').trim(),
-        'content-type':   'application/json',
-        'content-length': String(Buffer.byteLength(body)),
-      },
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) resolve();
-        else reject(new Error(`Brevo ${res.statusCode}: ${data}`));
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
 }
 
 async function sendInviteEmail(to, fromName, message) {
@@ -139,10 +124,9 @@ async function sendInviteEmail(to, fromName, message) {
         <em>"${message}"</em>
        </p>`
     : '';
-  const body = JSON.stringify({
-    sender:      { name: '9Boxes', email: process.env.BREVO_SENDER_EMAIL },
-    to:          [{ email: to }],
-    subject:     `${fromName} seni 9Boxes oynamaya davet ediyor!`,
+  await sendBrevoEmail({
+    to,
+    subject: `${fromName} seni 9Boxes oynamaya davet ediyor!`,
     htmlContent: `
       <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:32px;background:#0f0e17;color:#fff;border-radius:16px">
         ${brandLogoEmailHtml()}
@@ -164,30 +148,6 @@ async function sendInviteEmail(to, fromName, message) {
         </p>
       </div>
     `,
-  });
-
-  await new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'api.brevo.com',
-      path:     '/v3/smtp/email',
-      method:   'POST',
-      headers:  {
-        'accept':         'application/json',
-        'api-key':        (process.env.BREVO_API_KEY || '').trim(),
-        'content-type':   'application/json',
-        'content-length': String(Buffer.byteLength(body)),
-      },
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) resolve();
-        else reject(new Error(`Brevo ${res.statusCode}: ${data}`));
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
   });
 }
 
@@ -1061,17 +1021,27 @@ app.get('/api/friends/search', requireAuth, async (req, res) => {
   const { data: users } = await supabase
     .from('users').select('id, username').ilike('username', `%${q}%`).neq('id', req.user.id).limit(8);
   if (!users || users.length === 0) return res.json([]);
-  const results = await Promise.all(users.map(async u => {
-    const { data: fs } = await supabase.from('friendships').select('id, status, requester_id')
-      .or(`and(requester_id.eq.${req.user.id},addressee_id.eq.${u.id}),and(requester_id.eq.${u.id},addressee_id.eq.${req.user.id})`)
-      .maybeSingle();
+
+  // Her arama sonucu için ayrı bir friendships sorgusu atmak yerine (N+1), kullanıcının
+  // TÜM arkadaşlık kayıtlarını tek seferde çekip bellekte eşleştiriyoruz.
+  const { data: friendships } = await supabase.from('friendships')
+    .select('id, status, requester_id, addressee_id')
+    .or(`requester_id.eq.${req.user.id},addressee_id.eq.${req.user.id}`);
+  const fsByOtherUser = new Map();
+  for (const fs of (friendships || [])) {
+    const otherId = String(fs.requester_id) === String(req.user.id) ? fs.addressee_id : fs.requester_id;
+    fsByOtherUser.set(String(otherId), fs);
+  }
+
+  const results = users.map(u => {
+    const fs = fsByOtherUser.get(String(u.id));
     let friendStatus = 'none';
     if (fs) {
       if (fs.status === 'accepted') friendStatus = 'friends';
       else if (fs.status === 'pending') friendStatus = fs.requester_id === req.user.id ? 'sent' : 'received';
     }
     return { id: u.id, username: u.username, friendStatus, friendshipId: fs?.id || null };
-  }));
+  });
   res.json(results);
 });
 
@@ -1270,13 +1240,13 @@ app.post('/api/daily/finalize', async (req, res) => {
     else if (rank === 3) kl = 100;
     else if (awarded < 100) kl = 20;
 
-    for (const s of group) {
+    // Aynı sıradaki oyuncuların yazma işlemleri birbirinden bağımsız — sıralı yerine
+    // paralel çalıştırılır. KL kazandırma, use_hint/oyun sonu ile aynı anda tetiklenirse
+    // yarış oluşmaması için creditKL'nin CAS (compare-and-swap) mekanizmasını kullanır.
+    await Promise.all(group.map(async s => {
       await supabase.from('daily_scores').update({ final_rank: rank, kl_earned: kl }).eq('id', s.id);
-      if (kl > 0) {
-        const { data: u } = await supabase.from('users').select('kl_balance').eq('id', s.user_id).single();
-        await supabase.from('users').update({ kl_balance: (u?.kl_balance || 0) + kl }).eq('id', s.user_id);
-      }
-    }
+      if (kl > 0) await userService.creditKL(s.user_id, kl);
+    }));
 
     awarded += group.length;
     rank += group.length;
@@ -1424,6 +1394,23 @@ function randomConsonant(pool, vowelsSet) {
   return letter;
 }
 
+// Ortak "5,4,3,2,1 → başla" geri sayım sekansı — 1v1 (roomCountdown) ve grup (grp_start)
+// modu aynı mekanizmayı, sadece farklı hedef oda/tick event'iyle kullanır.
+function runCountdown(targetRoom, tickEvent, onDone) {
+  let n = 5;
+  io.to(targetRoom).emit(tickEvent, { n });
+  const interval = setInterval(() => {
+    n--;
+    if (n <= 0) {
+      clearInterval(interval);
+      onDone();
+    } else {
+      io.to(targetRoom).emit(tickEvent, { n });
+    }
+  }, 1000);
+  return interval;
+}
+
 function roomCountdown(room) {
   const langSet = _wordSets[room.lang] || _wordSets['tr'];
   const { changed } = balanceMatrix(room.matrix, langSet);
@@ -1437,18 +1424,10 @@ function roomCountdown(room) {
   room.vowelFixDelay = setTimeout(() => {
     room.vowelFixDelay = null;
     if (!rooms.has(room.id)) return; // oda çıkış sırasında silindi
-    let n = 5;
-    io.to(room.id).emit('countdown_tick', { n });
-    room.countdownInterval = setInterval(() => {
-      n--;
-      if (n <= 0) {
-        clearInterval(room.countdownInterval);
-        room.countdownInterval = null;
-        if (rooms.has(room.id)) roomStart(room);
-      } else {
-        io.to(room.id).emit('countdown_tick', { n });
-      }
-    }, 1000);
+    room.countdownInterval = runCountdown(room.id, 'countdown_tick', () => {
+      room.countdownInterval = null;
+      if (rooms.has(room.id)) roomStart(room);
+    });
   }, delay);
 }
 
@@ -1508,18 +1487,28 @@ async function roomEnd(room) {
 // Ortak kelime doğrulama çekirdeği — 1v1 (validateWord) ve günlük mod (/api/daily/submit)
 // tarafından paylaşılır. `existingWords`: bu oturumda zaten kabul edilmiş kelimelerin
 // (büyük harfli) düz string dizisi — tekrar/homofon sınırı bunun üzerinden hesaplanır.
+// Bir dizi karakterin ("harf havuzu") her karakterden kaç tane içerdiğini sayar.
+// Hem matris (harf listesi) hem de tek bir kelime (karakter dizisi) için kullanılır.
+function letterCounts(chars) {
+  const counts = {};
+  for (const ch of chars) counts[ch] = (counts[ch] || 0) + 1;
+  return counts;
+}
+
+// `need` sayımındaki her harften `counts`'ta en az o kadar var mı? (kelime matristen kurulabilir mi)
+function canBuildFromCounts(counts, need) {
+  for (const ch in need) {
+    if ((counts[ch] || 0) < need[ch]) return false;
+  }
+  return true;
+}
+
 function validateWordCore(matrix, langSet, existingWords, rawWord) {
   const locale = langSet.locale;
   const wordU = (rawWord || '').toLocaleUpperCase(locale);
   const wordL = wordU.toLocaleLowerCase(locale);
   if (wordU.length < langSet.minLength) return { status: 'short', word: wordU, points: 0 };
-  const mc = {};
-  matrix.forEach(l => { mc[l] = (mc[l] || 0) + 1; });
-  const need = {};
-  for (const ch of wordU) need[ch] = (need[ch] || 0) + 1;
-  for (const ch in need) {
-    if ((mc[ch] || 0) < need[ch]) return { status: 'invalid', word: wordU, points: 0 };
-  }
+  if (!canBuildFromCounts(letterCounts(matrix), letterCounts(wordU))) return { status: 'invalid', word: wordU, points: 0 };
   if (!langSet.wordSet.has(wordL) || langSet.blacklistSet.has(wordL)) return { status: 'invalid', word: wordU, points: 0 };
   const cnt = existingWords.filter(w => w === wordU).length;
   const max = langSet.homophoneSet.has(wordL) ? 2 : 1;
@@ -1538,6 +1527,18 @@ function genGroupCode() {
   do { code = String(Math.floor(100000 + Math.random() * 900000)); }
   while (groupRooms.has(code));
   return code;
+}
+
+// Grup oyunu saniye sayacı — hem yeni başlayan oyun (grp_start) hem de sunucu yeniden
+// başladığında devam eden bir oyunu canlandıran rebuildGroupRooms tarafından paylaşılır.
+function startGroupGameTimer(room) {
+  room.timerInterval = setInterval(() => {
+    room.timeLeft--;
+    io.to(`grp_${room.code}`).emit('grp_timer_tick', { timeLeft: room.timeLeft });
+    // Her 15 saniyede bir skoru/kelimeleri kaydet (her kelimede yazmak yerine debounce)
+    if (room.timeLeft % 15 === 0) groupRoomStore.upsertRoom(room);
+    if (room.timeLeft <= 0) grpRoomEnd(room);
+  }, 1000);
 }
 
 async function grpRoomEnd(room) {
@@ -1651,7 +1652,10 @@ io.on('connection', socket => {
   // Online kullanıcı kaydı + last_seen
   if (authToken) {
     userService.getUserByToken(authToken).then(user => {
-      if (user) {
+      // Bu async çağrı sürerken socket zaten bağlantısını kesmiş olabilir — o durumda
+      // onlineUsers'a eklemek, disconnect event'i çoktan geçtiği için asla temizlenmeyecek
+      // kalıcı bir "hayalet" kayıt bırakırdı.
+      if (user && socket.connected) {
         onlineUsers.set(String(user.id), { socket, name: user.username });
         socket._userId = String(user.id);
         userService.updateLastSeen(user.id);
@@ -1904,24 +1908,10 @@ io.on('connection', socket => {
     groupRoomStore.upsertRoom(room);
 
     const startCountdownSeq = () => {
-      let n = 5;
-      io.to(`grp_${code}`).emit('grp_countdown', { n });
-      const cdInterval = setInterval(() => {
-        n--;
-        if (n <= 0) {
-          clearInterval(cdInterval);
-          io.to(`grp_${code}`).emit('grp_game_start');
-          room.timerInterval = setInterval(() => {
-            room.timeLeft--;
-            io.to(`grp_${code}`).emit('grp_timer_tick', { timeLeft: room.timeLeft });
-            // Her 15 saniyede bir skoru/kelimeleri kaydet (her kelimede yazmak yerine debounce)
-            if (room.timeLeft % 15 === 0) groupRoomStore.upsertRoom(room);
-            if (room.timeLeft <= 0) grpRoomEnd(room);
-          }, 1000);
-        } else {
-          io.to(`grp_${code}`).emit('grp_countdown', { n });
-        }
-      }, 1000);
+      runCountdown(`grp_${code}`, 'grp_countdown', () => {
+        io.to(`grp_${code}`).emit('grp_game_start');
+        startGroupGameTimer(room);
+      });
     };
 
     // Matris düzeltildiyse, 1v1 modundaki gibi popup görünsün diye geri sayımı 3sn geciktir
@@ -1940,25 +1930,13 @@ io.on('connection', socket => {
     const player = room.players.find(p => p.socket?.id === socket.id);
     if (!player) return;
     const langSet = _wordSets[room.lang] || _wordSets['tr'];
-    const locale = langSet.locale;
-    const wordU = (word || '').toLocaleUpperCase(locale);
-    const wordL = wordU.toLocaleLowerCase(locale);
-    if (wordU.length < langSet.minLength) return socket.emit('grp_word_result', { status: 'short', word: wordU, points: 0 });
-    const mc = {};
-    room.matrix.forEach(l => { mc[l] = (mc[l] || 0) + 1; });
-    const need = {};
-    for (const ch of wordU) need[ch] = (need[ch] || 0) + 1;
-    for (const ch in need) {
-      if ((mc[ch] || 0) < need[ch]) return socket.emit('grp_word_result', { status: 'invalid', word: wordU, points: 0 });
+    // player.words zaten büyük harfli düz string dizisi — validateWordCore'un beklediği format.
+    const result = validateWordCore(room.matrix, langSet, player.words, word);
+    socket.emit('grp_word_result', result);
+    if (result.status === 'valid') {
+      player.words.push(result.word);
+      player.score += result.points;
     }
-    if (!langSet.wordSet.has(wordL) || langSet.blacklistSet.has(wordL))
-      return socket.emit('grp_word_result', { status: 'invalid', word: wordU, points: 0 });
-    const cnt = player.words.filter(w => w === wordU).length;
-    const max = langSet.homophoneSet.has(wordL) ? 2 : 1;
-    if (cnt >= max) return socket.emit('grp_word_result', { status: 'duplicate', word: wordU, points: 0 });
-    player.words.push(wordU);
-    player.score += wordU.length;
-    socket.emit('grp_word_result', { status: 'valid', word: wordU, points: wordU.length });
   });
 
   socket.on('grp_check_active', async () => {
@@ -2099,18 +2077,13 @@ io.on('connection', socket => {
     // Matristeki harflerden kelime bul
     const hintLangSet = _wordSets[room.lang] || _wordSets['tr'];
     const hintLocale = hintLangSet.locale;
-    const mc = {};
-    room.matrix.forEach(l => { mc[l] = (mc[l] || 0) + 1; });
+    const mc = letterCounts(room.matrix);
     const found = new Set(room.words[pIdx].map(w => w.word.toLocaleLowerCase(hintLocale)));
     const candidates = [];
     for (const word of hintLangSet.wordSet) {
       if (found.has(word) || word.length < hintLangSet.minLength) continue;
       const wordU = word.toLocaleUpperCase(hintLocale);
-      const need = {};
-      for (const ch of wordU) need[ch] = (need[ch] || 0) + 1;
-      let ok = true;
-      for (const ch in need) { if ((mc[ch] || 0) < need[ch]) { ok = false; break; } }
-      if (ok) candidates.push(wordU);
+      if (canBuildFromCounts(mc, letterCounts(wordU))) candidates.push(wordU);
     }
 
     if (candidates.length === 0) {
@@ -2204,7 +2177,13 @@ io.on('connection', socket => {
   socket.on('disconnect', () => {
     if (socket._heartbeat) clearInterval(socket._heartbeat);
     if (socket._userId) {
-      onlineUsers.delete(String(socket._userId));
+      // Kullanıcı bu socket kapanmadan önce YENİ bir sekme/cihazla zaten yeniden bağlanmış
+      // olabilir (onlineUsers'ta artık o yeni socket kayıtlı) — bu durumda eski socket'in
+      // gecikmeli disconnect'i o güncel kaydı silmemeli (aksi halde arkadaş daveti gibi
+      // "çevrimiçi mi" kontrolleri kullanıcıyı yanlışlıkla çevrimdışı gösterir).
+      if (onlineUsers.get(String(socket._userId))?.socket === socket) {
+        onlineUsers.delete(String(socket._userId));
+      }
       userService.updateLastSeen(socket._userId);
     }
     // Kuyruktan çıkar
@@ -2298,11 +2277,7 @@ async function rebuildGroupRooms() {
       }
       // Oyun devam ediyorsa timer'ı yeniden başlat
       if (room.status === 'playing' && room.timeLeft > 0) {
-        room.timerInterval = setInterval(() => {
-          room.timeLeft--;
-          io.to(`grp_${room.code}`).emit('grp_timer_tick', { timeLeft: room.timeLeft });
-          if (room.timeLeft <= 0) grpRoomEnd(room);
-        }, 1000);
+        startGroupGameTimer(room);
       }
       loaded++;
     }

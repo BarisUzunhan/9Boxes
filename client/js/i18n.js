@@ -428,7 +428,7 @@ export function t(key, vars = {}) {
   const dict = TRANSLATIONS[_lang] || TRANSLATIONS['tr'];
   let str = dict[key] || TRANSLATIONS['tr'][key] || key;
   for (const [k, v] of Object.entries(vars)) {
-    str = str.replace(`{${k}}`, v);
+    str = str.replaceAll(`{${k}}`, v);
   }
   return str;
 }

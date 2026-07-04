@@ -5,7 +5,7 @@ import {
   state, PHASES,
   getRandomLetter, setFillLetter, balanceMatrix,
   addLetterToWord, addLetterByChar, removeLastLetter, clearCurrentWord,
-  submitCurrentWord, findMissedWords,
+  submitCurrentWord, findMissedWords, findPossibleWords,
   startCountdown, startGame, stopGame, restartTimer, resetToFill,
   setGameDuration,
   setActiveLang, setActiveLangTemp, getActiveLang, getActiveLangConfig,
@@ -19,7 +19,7 @@ import {
   updateWordDisplay, showWordFeedback,
   updateTimer, updateScore, addWordToPanel,
   renderResult, toggleWordsPanel,
-  escapeHtml,
+  escapeHtml, renderMissedWordsList,
 } from './ui.js';
 
 // ─── Verbum9 → 9Boxes geçişi: eski localStorage anahtarlarını taşı ─────
@@ -141,7 +141,6 @@ function loadSettings() {
   setSoundEnabled(_soundEnabled);
   document.getElementById('setting-sound').checked = _soundEnabled;
 
-  const dur = 120;
   _gameDuration = 120;
   setGameDuration(_gameDuration);
   document.querySelectorAll('.duration-btn').forEach(btn => {
@@ -914,16 +913,23 @@ function _playTimerSound(t) {
   else if (t > 0 && t <= 10) playUrgentBeep();
 }
 
-socket.on('timer_tick', ({ timeLeft }) => {
+// Sunucudan gelen bir tik sonrası yerel saniye saymayı (bir sonraki sunucu tik'ine kadar
+// arayı doldurmak için) yeniden başlatır. timer_tick, visibilitychange senkronizasyonu,
+// reconnected_to_game, extension_accepted ve grp_timer_tick tarafından paylaşılır.
+function startLocalTimer(timeLeft, { sound = true } = {}) {
   clearInterval(_localTimerInterval);
   updateTimer(timeLeft);
-  _playTimerSound(timeLeft);
-  _lastTick = { serverTime: timeLeft, wallTime: Date.now() };
+  if (sound) _playTimerSound(timeLeft);
   let t = timeLeft - 1;
   _localTimerInterval = setInterval(() => {
-    if (t >= 0) { updateTimer(t); _playTimerSound(t); t--; }
+    if (t >= 0) { updateTimer(t); if (sound) _playTimerSound(t); t--; }
     else clearInterval(_localTimerInterval);
   }, 1000);
+}
+
+socket.on('timer_tick', ({ timeLeft }) => {
+  startLocalTimer(timeLeft);
+  _lastTick = { serverTime: timeLeft, wallTime: Date.now() };
 });
 
 // Ekran yeniden açıldığında: süreyi duvar saatiyle senkronize et / gerekirse oyunu bitir
@@ -958,16 +964,10 @@ document.addEventListener('visibilitychange', () => {
 
   // ─ Çok oyunculu: socket bağlı, yerel sayacı senkronize et ────
   if (!_lastTick) return;
-  clearInterval(_localTimerInterval);
   const elapsed = Math.floor((Date.now() - _lastTick.wallTime) / 1000);
   const estimated = Math.max(0, _lastTick.serverTime - elapsed);
-  updateTimer(estimated);
+  startLocalTimer(estimated);
   _lastTick = { serverTime: estimated, wallTime: Date.now() };
-  let t = estimated - 1;
-  _localTimerInterval = setInterval(() => {
-    if (t >= 0) { updateTimer(t); _playTimerSound(t); t--; }
-    else clearInterval(_localTimerInterval);
-  }, 1000);
 });
 
 socket.on('word_result', result => {
@@ -998,7 +998,7 @@ socket.on('game_over', async ({ players }) => {
   removeGameEvents();
   releaseWakeLock();
 
-  // Her iki oyuncunun bulduğu geçerli kelimeler — _findMissedForMatrix aktif dilin locale'ini
+  // Her iki oyuncunun bulduğu geçerli kelimeler — findPossibleWords aktif dilin locale'ini
   // kullanıyor, bu yüzden burada da aynı locale kullanılmalı (yoksa "I" içeren İngilizce
   // kelimeler tr-TR/en-US uyuşmazlığı yüzünden bulunmuş olsa da "kaçırıldı" gösterilir).
   const _locale = getActiveLangConfig().locale;
@@ -1006,7 +1006,7 @@ socket.on('game_over', async ({ players }) => {
     ...players[0].words.map(w => w.word.toLocaleLowerCase(_locale)),
     ...players[1].words.map(w => w.word.toLocaleLowerCase(_locale)),
   ]);
-  const missed = _findMissedForMatrix(state.matrix, allFound);
+  const missed = findPossibleWords(state.matrix, allFound, _locale);
 
   renderResultMulti(players, missed);
   showScreen('screen-result');
@@ -1081,13 +1081,7 @@ socket.on('reconnected_to_game', ({ phase, matrix, turnIndex, timeLeft, playerIn
   } else if (phase === 'playing') {
     state.phase = PHASES.PLAYING;
     renderGameMatrix(onTileClick);
-    clearInterval(_localTimerInterval);
-    updateTimer(timeLeft);
-    let t = timeLeft - 1;
-    _localTimerInterval = setInterval(() => {
-      if (t >= 0) { updateTimer(t); t--; }
-      else clearInterval(_localTimerInterval);
-    }, 1000);
+    startLocalTimer(timeLeft, { sound: false });
     document.getElementById('score-value').textContent = myScore;
     const ul = document.getElementById('words-list');
     ul.innerHTML = '';
@@ -1100,26 +1094,6 @@ socket.on('reconnected_to_game', ({ phase, matrix, turnIndex, timeLeft, playerIn
   }
   showToast('Bağlantı yeniden kuruldu!', 3000);
 });
-
-// ─── Matristeki harflerle kurulabilecek ama yazılmayan kelimeler ─────────────
-
-function _findMissedForMatrix(matrix, foundSet, locale = getActiveLangConfig().locale) {
-  const mc = {};
-  for (const l of matrix) if (l) mc[l] = (mc[l] || 0) + 1;
-  const possible = [];
-  for (const word of getWordArray()) {
-    if (foundSet.has(word)) continue;
-    const wordU = word.toLocaleUpperCase(locale);
-    const needed = {};
-    for (const ch of wordU) needed[ch] = (needed[ch] || 0) + 1;
-    let ok = true;
-    for (const ch in needed) {
-      if ((mc[ch] || 0) < needed[ch]) { ok = false; break; }
-    }
-    if (ok) possible.push(word);
-  }
-  return possible.sort((a, b) => b.length - a.length || a.localeCompare(b, locale));
-}
 
 // ─── Çok oyunculu doldurma ───────────────────────────────────
 
@@ -1273,38 +1247,14 @@ function renderResultMulti(players, missedWords = []) {
   document.getElementById('result-words-section').hidden = true;
 
   // Kaçırılan kelimeler
-  const missedSection = document.getElementById('result-missed-section');
-  const missedList = document.getElementById('result-missed-list');
-  missedList.innerHTML = '';
-  missedSection.hidden = false;
-  if (missedWords.length > 0) {
-    const display = missedWords.slice(0, 100);
-    document.getElementById('result-missed-count').textContent =
-      missedWords.length > 100
-        ? `${missedWords.length} kelime (ilk 100 gösteriliyor)`
-        : `${missedWords.length} kelime`;
-    display.forEach(word => {
-      const li = document.createElement('li');
-      li.className = 'valid';
-      const wordBtn = document.createElement('button');
-      wordBtn.className = 'word-meaning-btn';
-      wordBtn.textContent = word;
-      wordBtn.addEventListener('click', () => showMeaning(word));
-      li.appendChild(wordBtn);
-      const pts = document.createElement('span');
-      pts.className = 'word-points';
-      pts.textContent = word.length + ' harf';
-      li.appendChild(pts);
-      missedList.appendChild(li);
-    });
-  } else {
-    document.getElementById('result-missed-count').textContent = '';
-    const li = document.createElement('li');
-    li.className = 'valid';
-    li.style.opacity = '0.5';
-    li.textContent = t('result.all_found');
-    missedList.appendChild(li);
-  }
+  document.getElementById('result-missed-section').hidden = false;
+  renderMissedWordsList(
+    document.getElementById('result-missed-list'),
+    document.getElementById('result-missed-count'),
+    missedWords,
+    showMeaning,
+    t('result.all_found')
+  );
 
   socket.disconnect();
   mode = 'solo';
@@ -1629,14 +1579,8 @@ socket.on('extension_requested', ({ fromName }) => {
 });
 
 socket.on('extension_accepted', ({ newTimeLeft }) => {
-  clearInterval(_localTimerInterval);
-  updateTimer(newTimeLeft);
+  startLocalTimer(newTimeLeft);
   _lastTick = { serverTime: newTimeLeft, wallTime: Date.now() };
-  let t = newTimeLeft - 1;
-  _localTimerInterval = setInterval(() => {
-    if (t >= 0) { updateTimer(t); _playTimerSound(t); t--; }
-    else clearInterval(_localTimerInterval);
-  }, 1000);
   showToast(`${mp.opponentName} kabul etti — +30 saniye eklendi!`, 3000);
 });
 
@@ -1989,9 +1933,7 @@ socket.on('friend_request_accepted', ({ byUsername }) => {
 // ─── Çoklu Mod (Grup Odası) ──────────────────────────────────
 
 let _grpCode = '';
-let _grpHostName = '';
 let _grpSelectedFriendIds = new Set();
-let _grpInviteCode = '';
 let _grpCreateTimer = null; // oda oluşturma zaman aşımı
 
 // Host matris durumu
@@ -2353,7 +2295,6 @@ function restoreOriginalLang() {
 
 socket.on('grp_approved', ({ code, hostName, lang }) => {
   _grpCode = code;
-  _grpHostName = hostName || '—';
   if (lang) { setActiveLangTemp(lang); applyLang(lang); switchDictionary(lang); }
   document.getElementById('mw-host-name').textContent = hostName || '—';
   document.getElementById('mw-code').textContent = code;
@@ -2518,14 +2459,7 @@ socket.on('grp_game_start', () => {
 });
 
 socket.on('grp_timer_tick', ({ timeLeft }) => {
-  clearInterval(_localTimerInterval);
-  updateTimer(timeLeft);
-  _playTimerSound(timeLeft);
-  let t = timeLeft - 1;
-  _localTimerInterval = setInterval(() => {
-    if (t >= 0) { updateTimer(t); _playTimerSound(t); t--; }
-    else clearInterval(_localTimerInterval);
-  }, 1000);
+  startLocalTimer(timeLeft);
 });
 
 socket.on('grp_word_result', result => {
@@ -2554,7 +2488,7 @@ socket.on('grp_ended', ({ rankings, words }) => {
   releaseWakeLock();
   const _locale = getActiveLangConfig().locale;
   const foundSet = new Set(words.map(w => w.word.toLocaleLowerCase(_locale)));
-  const missed = _findMissedForMatrix(state.matrix, foundSet, _locale);
+  const missed = findPossibleWords(state.matrix, foundSet, _locale);
   renderGroupResult(rankings, words, missed);
   showScreen('screen-group-result');
 });
@@ -2592,26 +2526,15 @@ function renderGroupResult(rankings, words, missed = []) {
 
   // Kaçırılan kelimeler
   const missedSection = document.getElementById('grp-missed-section');
-  const missedList = document.getElementById('grp-missed-list');
-  missedList.innerHTML = '';
-  if (missed.length > 0) {
-    missedSection.hidden = false;
-    const display = missed.slice(0, 100);
-    document.getElementById('grp-missed-count').textContent =
-      missed.length > 100 ? `${missed.length} kelime (ilk 100 gösteriliyor)` : `${missed.length} kelime`;
-    display.forEach(word => {
-      const li = document.createElement('li');
-      li.className = 'valid';
-      const btn = document.createElement('button');
-      btn.className = 'word-meaning-btn';
-      btn.textContent = word;
-      btn.addEventListener('click', () => showMeaning(word));
-      li.appendChild(btn);
-      missedList.appendChild(li);
-    });
-  } else {
-    missedSection.hidden = true;
-  }
+  missedSection.hidden = missed.length === 0;
+  renderMissedWordsList(
+    document.getElementById('grp-missed-list'),
+    document.getElementById('grp-missed-count'),
+    missed,
+    showMeaning,
+    null,
+    /* showPoints */ false
+  );
 }
 
 // ─── Sekme kapanınca / sayfa yenilenince kasıtlı çıkış bildir ─

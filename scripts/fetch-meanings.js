@@ -57,16 +57,32 @@ function delay(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
+// Supabase/PostgREST varsayılan olarak tek sorguda en fazla 1000 satır döndürür — sözlük
+// bundan büyük olduğu için sayfalama yapmazsak "zaten kayıtlı" seti eksik kalır ve script
+// her çalıştırmada aynı kelimeleri gereksiz yere tekrar çeker.
+async function fetchAllRows(table, selectCols) {
+  const PAGE = 1000;
+  let rows = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase.from(table).select(selectCols).range(from, from + PAGE - 1);
+    if (error) { console.error(`${table} sorgu hatası:`, error.message); break; }
+    if (!data || data.length === 0) break;
+    rows = rows.concat(data);
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
+  return rows;
+}
+
 async function main() {
   const allWords = JSON.parse(fs.readFileSync(WORDS_PATH, 'utf8')).words;
   console.log(`Sözlükte toplam ${allWords.length} kelime.`);
 
   // Anlamı dolu olanları atla, boş olanları tekrar çek
-  const { data: existing } = await supabase
-    .from('word_meanings')
-    .select('word,meanings');
+  const existing = await fetchAllRows('word_meanings', 'word,meanings');
   const done = new Set(
-    (existing || []).filter(r => r.meanings && r.meanings.length > 0).map(r => r.word)
+    existing.filter(r => r.meanings && r.meanings.length > 0).map(r => r.word)
   );
   console.log(`Anlamı dolu: ${done.size}`);
 

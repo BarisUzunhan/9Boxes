@@ -187,13 +187,9 @@ export function startCountdown(onTick, onDone) {
   }, 1000);
 }
 
-export function startGame(onTimerTick, onGameEnd) {
-  state.phase = PHASES.PLAYING;
-  state.timeLeft = currentDuration;
-  state.score = 0;
-  state.submittedWords = [];
-  clearCurrentWord();
-
+// startGame ve restartTimer'ın paylaştığı saniye sayacı gövdesi — ikisi de state.timeLeft'i
+// zaten kendi başlangıç değerine ayarladıktan sonra bunu çağırır.
+function _runTimer(onTimerTick, onGameEnd) {
   state._timerInterval = setInterval(() => {
     state.timeLeft--;
     onTimerTick(state.timeLeft);
@@ -212,6 +208,15 @@ export function startGame(onTimerTick, onGameEnd) {
   }, 1000);
 }
 
+export function startGame(onTimerTick, onGameEnd) {
+  state.phase = PHASES.PLAYING;
+  state.timeLeft = currentDuration;
+  state.score = 0;
+  state.submittedWords = [];
+  clearCurrentWord();
+  _runTimer(onTimerTick, onGameEnd);
+}
+
 export function stopGame() {
   if (state._timerInterval) clearInterval(state._timerInterval);
 }
@@ -220,17 +225,7 @@ export function stopGame() {
 export function restartTimer(seconds, onTimerTick, onGameEnd) {
   if (state._timerInterval) clearInterval(state._timerInterval);
   state.timeLeft = seconds;
-  state._timerInterval = setInterval(() => {
-    state.timeLeft--;
-    onTimerTick(state.timeLeft);
-    if (state.timeLeft === 20 || state.timeLeft === 15) playWarningBeep();
-    else if (state.timeLeft > 0 && state.timeLeft <= 10) playUrgentBeep();
-    if (state.timeLeft <= 0) {
-      clearInterval(state._timerInterval);
-      state.phase = PHASES.RESULT;
-      onGameEnd();
-    }
-  }, 1000);
+  _runTimer(onTimerTick, onGameEnd);
 }
 
 export function resetToFill() {
@@ -252,20 +247,18 @@ export function formatTime(seconds) {
 
 // ─── Matristeki harflerle kurulabilecek kelimeleri bul ────────
 
-export function findMissedWords() {
-  const { locale } = getActiveLangConfig();
+// Verilen matristen kurulabilecek ama `foundSet`'te (küçük harfli) olmayan sözlük kelimelerini
+// bulur. Solo/daily (parametresiz findMissedWords) ve 1v1/grup sonuç ekranı (main.js'den
+// matrix+foundSet ile) tarafından paylaşılır.
+export function findPossibleWords(matrix, foundSet, locale = getActiveLangConfig().locale) {
   const matrixCounts = {};
-  for (const letter of state.matrix) {
+  for (const letter of matrix) {
     if (letter) matrixCounts[letter] = (matrixCounts[letter] || 0) + 1;
   }
 
-  const foundLower = new Set(
-    state.submittedWords.filter(w => w.valid).map(w => w.word.toLocaleLowerCase(locale))
-  );
-
   const possible = [];
   for (const word of getWordArray()) {
-    if (foundLower.has(word)) continue;
+    if (foundSet.has(word)) continue;
 
     const wordUpper = word.toLocaleUpperCase(locale);
     const needed = {};
@@ -282,4 +275,12 @@ export function findMissedWords() {
   }
 
   return possible.sort((a, b) => b.length - a.length || a.localeCompare(b, locale));
+}
+
+export function findMissedWords() {
+  const { locale } = getActiveLangConfig();
+  const foundLower = new Set(
+    state.submittedWords.filter(w => w.valid).map(w => w.word.toLocaleLowerCase(locale))
+  );
+  return findPossibleWords(state.matrix, foundLower, locale);
 }

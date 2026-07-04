@@ -186,6 +186,45 @@ export function addWordToPanel(wordObj) {
 
 // ─── Sonuç Ekranı ────────────────────────────────────────────
 
+// "Kaçırılan kelimeler" listesini render eder — solo, 1v1 ve grup sonuç ekranlarının üçü de
+// aynı diziyi (100 ile sınırlı gösterim, sayaç etiketi, boş durum mesajı) paylaşır.
+// `onWordClick` tıklanan kelimeyle çağrılır (solo bir CustomEvent yayar, 1v1/grup doğrudan
+// showMeaning çağırır — bu fark çağıran tarafın sorumluluğunda kalır).
+export function renderMissedWordsList(listEl, countEl, missedWords, onWordClick, emptyMessage, showPoints = true) {
+  listEl.innerHTML = '';
+  if (missedWords.length > 0) {
+    const display = missedWords.slice(0, 100);
+    if (countEl) {
+      countEl.textContent = missedWords.length > 100
+        ? `${missedWords.length} kelime (ilk 100 gösteriliyor)`
+        : `${missedWords.length} kelime`;
+    }
+    display.forEach(word => {
+      const li = document.createElement('li');
+      li.className = 'valid';
+      const wordBtn = document.createElement('button');
+      wordBtn.className = 'word-meaning-btn';
+      wordBtn.textContent = word;
+      wordBtn.addEventListener('click', () => onWordClick(word));
+      li.appendChild(wordBtn);
+      if (showPoints) {
+        const pts = document.createElement('span');
+        pts.className = 'word-points';
+        pts.textContent = word.length + ' harf';
+        li.appendChild(pts);
+      }
+      listEl.appendChild(li);
+    });
+  } else if (emptyMessage) {
+    if (countEl) countEl.textContent = '';
+    const li = document.createElement('li');
+    li.className = 'valid';
+    li.style.opacity = '0.5';
+    li.textContent = emptyMessage;
+    listEl.appendChild(li);
+  }
+}
+
 export function renderResult(missedWords = []) {
   document.getElementById('result-score-number').textContent = state.score;
 
@@ -211,7 +250,7 @@ export function renderResult(missedWords = []) {
       li.appendChild(document.createTextNode(w.word));
       const btn = document.createElement('button');
       btn.className = 'btn-dispute';
-      btn.dataset.word = w.word.toLocaleLowerCase('tr-TR');
+      btn.dataset.word = w.word.toLocaleLowerCase(getActiveLangConfig().locale);
       btn.textContent = 'İtiraz Et';
       li.appendChild(btn);
     }
@@ -220,40 +259,14 @@ export function renderResult(missedWords = []) {
 
   // Kaçırılan kelimeler — her zaman göster
   const missedSection = document.getElementById('result-missed-section');
-  const missedList = document.getElementById('result-missed-list');
-  missedList.innerHTML = '';
   missedSection.hidden = false;
-
-  if (missedWords.length > 0) {
-    const display = missedWords.slice(0, 100);
-    const countLabel = missedWords.length > 100
-      ? `${missedWords.length} kelime (ilk 100 gösteriliyor)`
-      : `${missedWords.length} kelime`;
-    document.getElementById('result-missed-count').textContent = countLabel;
-    display.forEach(word => {
-      const li = document.createElement('li');
-      li.className = 'valid';
-      const wordBtn = document.createElement('button');
-      wordBtn.className = 'word-meaning-btn';
-      wordBtn.textContent = word;
-      wordBtn.addEventListener('click', () =>
-        document.dispatchEvent(new CustomEvent('verbum:show-meaning', { detail: { word } }))
-      );
-      li.appendChild(wordBtn);
-      const pts = document.createElement('span');
-      pts.className = 'word-points';
-      pts.textContent = word.length + ' harf';
-      li.appendChild(pts);
-      missedList.appendChild(li);
-    });
-  } else {
-    document.getElementById('result-missed-count').textContent = '';
-    const li = document.createElement('li');
-    li.className = 'valid';
-    li.style.opacity = '0.5';
-    li.textContent = 'Tüm kelimeler bulundu!';
-    missedList.appendChild(li);
-  }
+  renderMissedWordsList(
+    document.getElementById('result-missed-list'),
+    document.getElementById('result-missed-count'),
+    missedWords,
+    word => document.dispatchEvent(new CustomEvent('verbum:show-meaning', { detail: { word } })),
+    'Tüm kelimeler bulundu!'
+  );
 }
 
 // ─── Kelimeler Paneli Toggle ─────────────────────────────────
