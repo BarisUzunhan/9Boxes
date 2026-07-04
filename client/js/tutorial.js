@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 // ─── Depolama anahtarları ─────────────────────────────────────
 const KEYS = {
   lobby:  '9boxes_tut_lobby',
@@ -14,133 +16,43 @@ export function onEnd(key, fn) {
 }
 
 // ─── Adım tanımları ───────────────────────────────────────────
+// title/text i18n.js'de `tutorial.<section>.<index>.title/.text` anahtarlarıyla
+// tutuluyor (showStep bunları okur) — burada sadece hedef elementin seçicisi kalıyor.
 const SECTIONS = {
   lobby: [
-    {
-      title: 'Hoş Geldin!',
-      text: '9Boxes\'a hoş geldin! Sana arayüzü kısaca tanıtalım. Hazır mısın?',
-    },
-    {
-      sel: '#btn-profile',
-      title: 'Profil Alanın',
-      text: 'Kullanıcı adın, seviye ve oyun istatistiklerin burada. Profilini görüntülemek için buna bas.',
-    },
-    {
-      sel: '#btn-friends-lobby',
-      title: 'Arkadaşlar',
-      text: 'Arkadaşlarını buradan yönetebilirsin. Kullanıcı ara, arkadaşlık isteği gönder — çevrimiçi arkadaşlarını oyuna davet et!',
-    },
-    {
-      sel: '#btn-settings-lobby',
-      title: 'Ayarlar',
-      text: 'Tema (koyu/açık) ve ses gibi tercihlerini buradan değiştirebilirsin.',
-    },
-    {
-      sel: '.lobby-stats-bar',
-      title: 'İstatistik Çubuğun',
-      text: 'Anlık seviye, toplam puan ve KL bakiyeni buradan takip edebilirsin.',
-    },
-    {
-      sel: '#mode-solo',
-      title: 'Tek Oyunculu',
-      text: 'Kendi başına oyna. Harfleri kendin seç, matristeki harflerle kelimeler bul.',
-    },
-    {
-      sel: '#mode-1v1',
-      title: '1v1 Online',
-      text: 'Gerçek zamanlı bir rakiple eşleş ve yarış. Ortak olmayan kelimeler puan getirir — en çok puan toplayan kazanır!',
-    },
-    {
-      sel: '#mode-daily',
-      title: 'Günlük Oyun',
-      text: 'Her gün herkes aynı harflerle yarışır! 2 dk 30 sn içinde en çok kelimeyi bul. İlk 100\'e girene KL ödülü var.',
-    },
-    {
-      sel: '#mode-solo',
-      title: 'Deneyelim!',
-      text: 'Hadi bir oyun oynayalım! "Tek Oyunculu" butonuna bas — seni matris doldurma, oyun ve sonuç ekranlarında da yönlendireceğiz.',
-    },
+    {},
+    { sel: '#btn-profile' },
+    { sel: '#btn-friends-lobby' },
+    { sel: '#btn-settings-lobby' },
+    { sel: '.lobby-stats-bar' },
+    { sel: '#mode-solo' },
+    { sel: '#mode-1v1' },
+    { sel: '#mode-daily' },
+    { sel: '#mode-solo' },
   ],
 
   fill: [
-    {
-      title: 'Harf Seçimi!',
-      text: '3×3 matristeki 9 hücreyi doldurman gerekiyor. Bu harflerle kelime kuracaksın — istediğin harfleri seçebilirsin!',
-    },
-    {
-      sel: '#fill-matrix',
-      title: 'Harf Matrisi',
-      text: 'Bir hücreye tıkla ve klavyeden harf gir. Sırayla tüm hücreleri doldur.',
-    },
-    {
-      sel: '#btn-random-one',
-      title: 'Rastgele Harf',
-      text: 'Hangi harfi gireceğini bilmiyorsan bu butona bas — seçili hücreye rastgele bir harf atar.',
-    },
-    {
-      sel: '#btn-random-all',
-      title: 'Hepsini Doldur',
-      text: 'Tüm boş hücreleri tek seferde rastgele doldurmak için buna bas.',
-    },
-    {
-      sel: '#btn-fill-keyboard',
-      title: 'Klavye Butonu',
-      text: 'Telefonda kullanıyorsan ekran klavyesini açmak için buna bas.',
-    },
-    {
-      sel: '#btn-start-game',
-      title: 'Hazır mısın?',
-      text: 'Harfleri seçtikten sonra "Oyunu Başlat" butonuna bas — oyun başlasın!',
-    },
+    {},
+    { sel: '#fill-matrix' },
+    { sel: '#btn-random-one' },
+    { sel: '#btn-random-all' },
+    { sel: '#btn-fill-keyboard' },
+    { sel: '#btn-start-game' },
   ],
 
   game: [
-    {
-      title: 'Oyun Başladı!',
-      text: 'Süre dolmadan matristeki harfleri kullanarak olabildiğince çok kelime bul. Uzun kelimeler daha çok puan getirir!',
-    },
-    {
-      sel: '#game-timer',
-      title: 'Süre',
-      text: '2 dakikan var. Süre sıfırlandığında oyun biter ve puanlar hesaplanır.',
-    },
-    {
-      sel: '#game-matrix',
-      title: 'Harf Matrisi',
-      text: 'Hücrelere sırayla tıkla ya da klavyeyle yaz. Harfleri her seferinde sıfırdan seçebilirsin.',
-    },
-    {
-      sel: '#word-display',
-      title: 'Kelime Alanı',
-      text: 'Oluşturduğun kelime burada görünür. Geçerliyse Enter veya ✓ ile onayla.',
-    },
-    {
-      sel: '#btn-hint',
-      title: 'İpucu',
-      text: '150 KL karşılığında ipucu alırsın — matristeki harflerden geçerli bir kelimenin bazı harflerini gösterir.',
-    },
-    {
-      sel: '#btn-toggle-words',
-      title: 'Kelimelerim',
-      text: 'Bulduğun kelimeleri görmek için buna bas. Geçersiz kelimeler için buradan itiraz da edebilirsin.',
-    },
+    {},
+    { sel: '#game-timer' },
+    { sel: '#game-matrix' },
+    { sel: '#word-display' },
+    { sel: '#btn-hint' },
+    { sel: '#btn-toggle-words' },
   ],
 
   result: [
-    {
-      title: 'Oyun Bitti!',
-      text: 'Sonuçlar hazır! Kaç puan aldığını gör ve kaçırdığın kelimeleri incele.',
-    },
-    {
-      sel: '#result-score-number',
-      title: 'Toplam Puanın',
-      text: 'Bulduğun kelimelerin harf sayısı kadar puan aldın. Rakibinle ortak olmayan kelimeler sayılır.',
-    },
-    {
-      sel: '#result-missed-section',
-      title: 'Kaçırdıkların',
-      text: 'Matristeki harflerle yazılabilecek ama bulamadığın kelimeler burada görünür. Bir sonraki oyunda daha iyi olacaksın!',
-    },
+    {},
+    { sel: '#result-score-number' },
+    { sel: '#result-missed-section' },
   ],
 };
 
@@ -257,11 +169,12 @@ function showStep(idx) {
   }
 
   stepIdx = idx;
-  $('tut-title').textContent   = step.title;
-  $('tut-text').textContent    = step.text;
+  const key = `tutorial.${currentKey}.${idx}`;
+  $('tut-title').textContent   = t(`${key}.title`);
+  $('tut-text').textContent    = t(`${key}.text`);
   $('tut-counter').textContent = `${idx + 1} / ${currentSteps.length}`;
   $('tut-prev').disabled       = idx === 0;
-  $('tut-next').textContent    = idx === currentSteps.length - 1 ? 'Tamamla ✓' : 'Sonraki →';
+  $('tut-next').textContent    = idx === currentSteps.length - 1 ? t('tutorial.finish') : t('tutorial.next');
 
   placePopup(step.sel);   // önce popup'ı yerleştir
   buildMask(step.sel);    // sonra maskede popup'ın da deliğini aç

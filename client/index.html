@@ -539,9 +539,9 @@
       <div class="settings-row" id="settings-duration-row">
         <span class="settings-label" data-i18n="settings.duration">Oyun Süresi</span>
         <div class="toggle-group">
-          <button class="toggle-btn duration-btn active" data-dur="120">2 dk</button>
-          <button class="toggle-btn duration-btn" data-dur="180">3 dk</button>
-          <button class="toggle-btn duration-btn" data-dur="300">5 dk</button>
+          <button class="toggle-btn duration-btn active" data-dur="120" data-i18n="duration.2min">2 dk</button>
+          <button class="toggle-btn duration-btn" data-dur="180" data-i18n="duration.3min">3 dk</button>
+          <button class="toggle-btn duration-btn" data-dur="300" data-i18n="duration.5min">5 dk</button>
         </div>
       </div>
       <div class="settings-row" id="settings-lang-row">
@@ -595,11 +595,11 @@
     <div class="exit-confirm-backdrop"></div>
     <div class="exit-confirm-content">
       <div class="invite-icon">⚡</div>
-      <p class="exit-confirm-text"><strong id="invite-from-name"></strong> sizi oyuna davet etti!</p>
+      <p class="exit-confirm-text" id="invite-message"></p>
       <div class="invite-countdown-bar"><div id="invite-countdown-fill" class="invite-countdown-fill"></div></div>
       <div class="exit-confirm-actions">
-        <button id="btn-invite-accept" class="btn-primary">Kabul Et</button>
-        <button id="btn-invite-decline" class="btn-secondary">Reddet</button>
+        <button id="btn-invite-accept" class="btn-primary" data-i18n="invite.accept">Kabul Et</button>
+        <button id="btn-invite-decline" class="btn-secondary" data-i18n="invite.decline">Reddet</button>
       </div>
     </div>
   </div>
@@ -641,14 +641,14 @@
   <div id="multi-name-popup" class="exit-confirm" hidden>
     <div class="exit-confirm-backdrop"></div>
     <div class="exit-confirm-content" style="max-width:360px">
-      <p class="exit-confirm-text" style="margin-bottom:6px">Görünen Adın</p>
-      <p style="color:var(--text-dim);font-size:.85rem;margin-bottom:14px">Diğer oyuncular seni bu isimle görecek.</p>
-      <input id="multi-display-name" type="text" placeholder="Adın (maks. 20 karakter)" maxlength="20"
+      <p class="exit-confirm-text" style="margin-bottom:6px" data-i18n="multi.name_popup.title">Görünen Adın</p>
+      <p style="color:var(--text-dim);font-size:.85rem;margin-bottom:14px" data-i18n="multi.name_popup.desc">Diğer oyuncular seni bu isimle görecek.</p>
+      <input id="multi-display-name" type="text" data-i18n="multi.name_popup.ph" data-i18n-attr="placeholder" placeholder="Adın (maks. 20 karakter)" maxlength="20"
         style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:var(--surface2);color:var(--text);font-size:1rem;outline:none;margin-bottom:8px">
       <p id="multi-name-error" class="auth-error"></p>
       <div class="exit-confirm-actions">
-        <button id="btn-multi-name-cancel" class="btn-secondary">İptal</button>
-        <button id="btn-multi-name-confirm" class="btn-primary">Devam →</button>
+        <button id="btn-multi-name-cancel" class="btn-secondary" data-i18n="multi.name_popup.cancel">İptal</button>
+        <button id="btn-multi-name-confirm" class="btn-primary" data-i18n="multi.name_popup.confirm">Devam →</button>
       </div>
     </div>
   </div>
@@ -680,10 +680,10 @@
       </div>
       <div class="mh-duration-row">
         <span class="mh-dur-label" data-i18n="multi.dur_label">Süre:</span>
-        <button class="mh-dur-btn" data-dur="120">2 dk</button>
-        <button class="mh-dur-btn mh-dur-active" data-dur="180">3 dk</button>
-        <button class="mh-dur-btn" data-dur="240">4 dk</button>
-        <button class="mh-dur-btn" data-dur="300">5 dk</button>
+        <button class="mh-dur-btn" data-dur="120" data-i18n="duration.2min">2 dk</button>
+        <button class="mh-dur-btn mh-dur-active" data-dur="180" data-i18n="duration.3min">3 dk</button>
+        <button class="mh-dur-btn" data-dur="240" data-i18n="duration.4min">4 dk</button>
+        <button class="mh-dur-btn" data-dur="300" data-i18n="duration.5min">5 dk</button>
       </div>
       <!-- Davet Et + Oyunu Başlat yan yana -->
       <div class="mh-action-row">
@@ -766,10 +766,10 @@
     <div class="exit-confirm-backdrop"></div>
     <div class="exit-confirm-content">
       <div class="invite-icon">👥</div>
-      <p class="exit-confirm-text"><strong id="grp-invite-from">—</strong> seni çoklu oyuna davet ediyor!</p>
+      <p class="exit-confirm-text" id="grp-invite-message"></p>
       <div class="exit-confirm-actions">
-        <button id="btn-grp-invite-accept" class="btn-primary">Katıl!</button>
-        <button id="btn-grp-invite-decline" class="btn-secondary">Hayır</button>
+        <button id="btn-grp-invite-accept" class="btn-primary" data-i18n="grp.invite_join">Katıl!</button>
+        <button id="btn-grp-invite-decline" class="btn-secondary" data-i18n="grp.invite_decline">Hayır</button>
       </div>
     </div>
   </div>
@@ -780,11 +780,11 @@
       <div id="tut-title"></div>
       <div id="tut-text"></div>
       <div class="tut-nav">
-        <button id="tut-prev" disabled>← Önceki</button>
+        <button id="tut-prev" disabled data-i18n="tutorial.prev">← Önceki</button>
         <span id="tut-counter">1 / 2</span>
-        <button id="tut-next">Sonraki →</button>
+        <button id="tut-next" data-i18n="tutorial.next">Sonraki →</button>
       </div>
-      <button id="tut-skip">Atla</button>
+      <button id="tut-skip" data-i18n="tutorial.skip">Atla</button>
     </div>
   </div>
 

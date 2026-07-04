@@ -210,7 +210,7 @@ export function renderMissedWordsList(listEl, countEl, missedWords, onWordClick,
       if (showPoints) {
         const pts = document.createElement('span');
         pts.className = 'word-points';
-        pts.textContent = word.length + ' harf';
+        pts.textContent = t('word.letters_count', { n: word.length });
         li.appendChild(pts);
       }
       listEl.appendChild(li);

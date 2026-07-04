@@ -324,10 +324,6 @@ function bindExitEvents() {
 // ─── Ayarlar paneli ───────────────────────────────────────────
 
 function openSettings() {
-  // Süre satırı: solo'da ve multi admin'de görünür, oyun sırasında gizli
-  const canChangeDuration = mode !== 'multi' || (mp.playerIndex === 0 && state.phase === PHASES.FILL);
-  document.getElementById('settings-duration-row').hidden = !canChangeDuration;
-
   // Mevcut değerleri yansıt
   const isLight = document.body.classList.contains('light');
   document.getElementById('btn-theme-dark').classList.toggle('active', !isLight);
@@ -1047,17 +1043,6 @@ socket.on('hint_result', async ({ ok, pattern, error }) => {
   // Sunucudan güncel KL bakiyesini çek
   const fresh = await fetchMe();
   if (fresh) { currentUser = fresh; renderLobby(); }
-});
-
-socket.on('duration_changed', ({ duration }) => {
-  _gameDuration = duration;
-  setGameDuration(duration);
-  localStorage.setItem('9boxes_duration', duration);
-  document.querySelectorAll('.duration-btn').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.dur) === duration);
-  });
-  const label = duration === 120 ? '2' : duration === 300 ? '5' : '3';
-  showToast(`Oyun süresi ${label} dakika olarak ayarlandı.`, 3000);
 });
 
 socket.on('reconnected_to_game', ({ phase, matrix, turnIndex, timeLeft, playerIndex, opponentName, myWords, myScore }) => {
@@ -1882,7 +1867,7 @@ let _currentInviteId = null;
 
 socket.on('friend_invite_received', ({ inviteId, fromUsername }) => {
   _currentInviteId = inviteId;
-  document.getElementById('invite-from-name').textContent = fromUsername;
+  document.getElementById('invite-message').textContent = t('invite.received', { name: fromUsername });
   document.getElementById('invite-popup').hidden = false;
   const fill = document.getElementById('invite-countdown-fill');
   fill.style.transition = 'none'; fill.style.width = '100%';
@@ -2245,7 +2230,7 @@ let _grpIncomingCode = '';
 
 socket.on('grp_friend_invite', ({ code, fromName }) => {
   _grpIncomingCode = code;
-  document.getElementById('grp-invite-from').textContent = fromName;
+  document.getElementById('grp-invite-message').textContent = t('grp.invite_received', { name: fromName });
   document.getElementById('grp-invite-popup').hidden = false;
 });
 
@@ -2519,7 +2504,7 @@ function renderGroupResult(rankings, words, missed = []) {
     li.appendChild(btn);
     const pts = document.createElement('span');
     pts.className = 'word-points';
-    pts.textContent = word.length + ' harf';
+    pts.textContent = t('word.letters_count', { n: word.length });
     li.appendChild(pts);
     list.appendChild(li);
   });

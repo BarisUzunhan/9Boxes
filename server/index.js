@@ -2102,18 +2102,6 @@ io.on('connection', socket => {
     socket.emit('hint_result', { ok: true, pattern });
   });
 
-  socket.on('set_duration', ({ duration }) => {
-    const roomId = socketRoom.get(socket.id);
-    if (!roomId) return;
-    const room = rooms.get(roomId);
-    if (!room || room.phase !== 'fill') return;
-    const pIdx = room.players.findIndex(s => s.id === socket.id);
-    if (pIdx !== 0) return; // sadece admin
-    if (![120, 180, 300].includes(duration)) return;
-    room.duration = duration;
-    io.to(room.id).emit('duration_changed', { duration });
-  });
-
   socket.on('leave_game', () => {
     const roomId = socketRoom.get(socket.id);
     if (!roomId) return;

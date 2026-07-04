@@ -55,6 +55,7 @@ const TRANSLATIONS = {
     'word.duplicate': '{word} zaten yazıldı',
     'word.short': 'En az {min} harf gerekli',
     'word.hint_label': '💡 {len} harfli bir kelime',
+    'word.letters_count': '{n} harf',
 
     // Result
     'result.title': 'Oyun Bitti!',
@@ -80,6 +81,10 @@ const TRANSLATIONS = {
     'settings.lang': 'Dil / Language',
     'settings.help': 'Yardım',
     'settings.tutorial': 'Tutorial Göster',
+    'duration.2min': '2 dk',
+    'duration.3min': '3 dk',
+    'duration.4min': '4 dk',
+    'duration.5min': '5 dk',
 
     // Popups
     'exit.confirm': 'Çıkmak istediğinizden emin misiniz?',
@@ -206,6 +211,81 @@ const TRANSLATIONS = {
     'lang.confirm.change': 'Dil Seç',
     'lang.name.tr': 'Türkçe',
     'lang.name.en': 'English',
+
+    // Davet popup'ları
+    'invite.received': '{name} sizi oyuna davet etti!',
+    'invite.accept': 'Kabul Et',
+    'invite.decline': 'Reddet',
+    'multi.name_popup.title': 'Görünen Adın',
+    'multi.name_popup.desc': 'Diğer oyuncular seni bu isimle görecek.',
+    'multi.name_popup.ph': 'Adın (maks. 20 karakter)',
+    'multi.name_popup.cancel': 'İptal',
+    'multi.name_popup.confirm': 'Devam →',
+    'grp.invite_received': '{name} seni çoklu oyuna davet ediyor!',
+    'grp.invite_join': 'Katıl!',
+    'grp.invite_decline': 'Hayır',
+
+    // Tutorial — nav
+    'tutorial.prev': '← Önceki',
+    'tutorial.next': 'Sonraki →',
+    'tutorial.finish': 'Tamamla ✓',
+    'tutorial.skip': 'Atla',
+
+    // Tutorial — lobby
+    'tutorial.lobby.0.title': 'Hoş Geldin!',
+    'tutorial.lobby.0.text': '9Boxes\'a hoş geldin! Sana arayüzü kısaca tanıtalım. Hazır mısın?',
+    'tutorial.lobby.1.title': 'Profil Alanın',
+    'tutorial.lobby.1.text': 'Kullanıcı adın, seviye ve oyun istatistiklerin burada. Profilini görüntülemek için buna bas.',
+    'tutorial.lobby.2.title': 'Arkadaşlar',
+    'tutorial.lobby.2.text': 'Arkadaşlarını buradan yönetebilirsin. Kullanıcı ara, arkadaşlık isteği gönder — çevrimiçi arkadaşlarını oyuna davet et!',
+    'tutorial.lobby.3.title': 'Ayarlar',
+    'tutorial.lobby.3.text': 'Tema (koyu/açık) ve ses gibi tercihlerini buradan değiştirebilirsin.',
+    'tutorial.lobby.4.title': 'İstatistik Çubuğun',
+    'tutorial.lobby.4.text': 'Anlık seviye, toplam puan ve KL bakiyeni buradan takip edebilirsin.',
+    'tutorial.lobby.5.title': 'Tek Oyunculu',
+    'tutorial.lobby.5.text': 'Kendi başına oyna. Harfleri kendin seç, matristeki harflerle kelimeler bul.',
+    'tutorial.lobby.6.title': '1v1 Online',
+    'tutorial.lobby.6.text': 'Gerçek zamanlı bir rakiple eşleş ve yarış. Ortak olmayan kelimeler puan getirir — en çok puan toplayan kazanır!',
+    'tutorial.lobby.7.title': 'Günlük Oyun',
+    'tutorial.lobby.7.text': 'Her gün herkes aynı harflerle yarışır! 2 dk 30 sn içinde en çok kelimeyi bul. İlk 100\'e girene KL ödülü var.',
+    'tutorial.lobby.8.title': 'Deneyelim!',
+    'tutorial.lobby.8.text': 'Hadi bir oyun oynayalım! "Tek Oyunculu" butonuna bas — seni matris doldurma, oyun ve sonuç ekranlarında da yönlendireceğiz.',
+
+    // Tutorial — fill
+    'tutorial.fill.0.title': 'Harf Seçimi!',
+    'tutorial.fill.0.text': '3×3 matristeki 9 hücreyi doldurman gerekiyor. Bu harflerle kelime kuracaksın — istediğin harfleri seçebilirsin!',
+    'tutorial.fill.1.title': 'Harf Matrisi',
+    'tutorial.fill.1.text': 'Bir hücreye tıkla ve klavyeden harf gir. Sırayla tüm hücreleri doldur.',
+    'tutorial.fill.2.title': 'Rastgele Harf',
+    'tutorial.fill.2.text': 'Hangi harfi gireceğini bilmiyorsan bu butona bas — seçili hücreye rastgele bir harf atar.',
+    'tutorial.fill.3.title': 'Hepsini Doldur',
+    'tutorial.fill.3.text': 'Tüm boş hücreleri tek seferde rastgele doldurmak için buna bas.',
+    'tutorial.fill.4.title': 'Klavye Butonu',
+    'tutorial.fill.4.text': 'Telefonda kullanıyorsan ekran klavyesini açmak için buna bas.',
+    'tutorial.fill.5.title': 'Hazır mısın?',
+    'tutorial.fill.5.text': 'Harfleri seçtikten sonra "Oyunu Başlat" butonuna bas — oyun başlasın!',
+
+    // Tutorial — game
+    'tutorial.game.0.title': 'Oyun Başladı!',
+    'tutorial.game.0.text': 'Süre dolmadan matristeki harfleri kullanarak olabildiğince çok kelime bul. Uzun kelimeler daha çok puan getirir!',
+    'tutorial.game.1.title': 'Süre',
+    'tutorial.game.1.text': '2 dakikan var. Süre sıfırlandığında oyun biter ve puanlar hesaplanır.',
+    'tutorial.game.2.title': 'Harf Matrisi',
+    'tutorial.game.2.text': 'Hücrelere sırayla tıkla ya da klavyeyle yaz. Harfleri her seferinde sıfırdan seçebilirsin.',
+    'tutorial.game.3.title': 'Kelime Alanı',
+    'tutorial.game.3.text': 'Oluşturduğun kelime burada görünür. Geçerliyse Enter veya ✓ ile onayla.',
+    'tutorial.game.4.title': 'İpucu',
+    'tutorial.game.4.text': '150 KL karşılığında ipucu alırsın — matristeki harflerden geçerli bir kelimenin bazı harflerini gösterir.',
+    'tutorial.game.5.title': 'Kelimelerim',
+    'tutorial.game.5.text': 'Bulduğun kelimeleri görmek için buna bas. Geçersiz kelimeler için buradan itiraz da edebilirsin.',
+
+    // Tutorial — result
+    'tutorial.result.0.title': 'Oyun Bitti!',
+    'tutorial.result.0.text': 'Sonuçlar hazır! Kaç puan aldığını gör ve kaçırdığın kelimeleri incele.',
+    'tutorial.result.1.title': 'Toplam Puanın',
+    'tutorial.result.1.text': 'Bulduğun kelimelerin harf sayısı kadar puan aldın. Rakibinle ortak olmayan kelimeler sayılır.',
+    'tutorial.result.2.title': 'Kaçırdıkların',
+    'tutorial.result.2.text': 'Matristeki harflerle yazılabilecek ama bulamadığın kelimeler burada görünür. Bir sonraki oyunda daha iyi olacaksın!',
   },
 
   en: {
@@ -264,6 +344,7 @@ const TRANSLATIONS = {
     'word.duplicate': '{word} already submitted',
     'word.short': 'At least {min} letters needed',
     'word.hint_label': '💡 {len}-letter word',
+    'word.letters_count': '{n} letters',
 
     // Result
     'result.title': 'Game Over!',
@@ -289,6 +370,10 @@ const TRANSLATIONS = {
     'settings.lang': 'Dil / Language',
     'settings.help': 'Help',
     'settings.tutorial': 'Show Tutorial',
+    'duration.2min': '2 min',
+    'duration.3min': '3 min',
+    'duration.4min': '4 min',
+    'duration.5min': '5 min',
 
     // Popups
     'exit.confirm': 'Are you sure you want to quit?',
@@ -415,6 +500,81 @@ const TRANSLATIONS = {
     'lang.confirm.change': 'Choose Language',
     'lang.name.tr': 'Türkçe',
     'lang.name.en': 'English',
+
+    // Invite popups
+    'invite.received': '{name} invited you to play!',
+    'invite.accept': 'Accept',
+    'invite.decline': 'Decline',
+    'multi.name_popup.title': 'Your Display Name',
+    'multi.name_popup.desc': 'Other players will see you by this name.',
+    'multi.name_popup.ph': 'Your name (max 20 chars)',
+    'multi.name_popup.cancel': 'Cancel',
+    'multi.name_popup.confirm': 'Continue →',
+    'grp.invite_received': '{name} is inviting you to a multiplayer game!',
+    'grp.invite_join': 'Join!',
+    'grp.invite_decline': 'No',
+
+    // Tutorial — nav
+    'tutorial.prev': '← Previous',
+    'tutorial.next': 'Next →',
+    'tutorial.finish': 'Finish ✓',
+    'tutorial.skip': 'Skip',
+
+    // Tutorial — lobby
+    'tutorial.lobby.0.title': 'Welcome!',
+    'tutorial.lobby.0.text': "Welcome to 9Boxes! Let's give you a quick tour of the interface. Ready?",
+    'tutorial.lobby.1.title': 'Your Profile',
+    'tutorial.lobby.1.text': 'Your username, level, and game stats are here. Tap it to view your profile.',
+    'tutorial.lobby.2.title': 'Friends',
+    'tutorial.lobby.2.text': 'Manage your friends here. Search for users, send friend requests — invite your online friends to play!',
+    'tutorial.lobby.3.title': 'Settings',
+    'tutorial.lobby.3.text': 'Change preferences like theme (dark/light) and sound from here.',
+    'tutorial.lobby.4.title': 'Your Stats Bar',
+    'tutorial.lobby.4.text': 'Track your current level, total score, and KL balance here.',
+    'tutorial.lobby.5.title': 'Single Player',
+    'tutorial.lobby.5.text': "Play on your own. Pick the letters yourself, then find words in the matrix.",
+    'tutorial.lobby.6.title': '1v1 Online',
+    'tutorial.lobby.6.text': "Match up with a real opponent in real time. Words the other player didn't find score points — most points wins!",
+    'tutorial.lobby.7.title': 'Daily Puzzle',
+    'tutorial.lobby.7.text': 'Everyone races with the same letters each day! Find as many words as you can in 2 min 30 sec. Top 100 earn a KL reward.',
+    'tutorial.lobby.8.title': "Let's Try It!",
+    'tutorial.lobby.8.text': 'Let\'s play a game! Tap "Single Player" — we\'ll guide you through the letter-fill, game, and result screens too.',
+
+    // Tutorial — fill
+    'tutorial.fill.0.title': 'Choosing Letters!',
+    'tutorial.fill.0.text': "You need to fill the 9 cells of the 3×3 matrix. You'll build words from these letters — pick whichever letters you like!",
+    'tutorial.fill.1.title': 'Letter Matrix',
+    'tutorial.fill.1.text': 'Tap a cell and type a letter on your keyboard. Fill all the cells one by one.',
+    'tutorial.fill.2.title': 'Random Letter',
+    'tutorial.fill.2.text': 'Not sure what to type? Tap this button — it fills the selected cell with a random letter.',
+    'tutorial.fill.3.title': 'Fill All',
+    'tutorial.fill.3.text': 'Tap this to fill all empty cells at once with random letters.',
+    'tutorial.fill.4.title': 'Keyboard Button',
+    'tutorial.fill.4.text': 'On mobile? Tap this to open the on-screen keyboard.',
+    'tutorial.fill.5.title': 'Ready?',
+    'tutorial.fill.5.text': 'Once you\'ve picked your letters, tap "Start Game" — let\'s go!',
+
+    // Tutorial — game
+    'tutorial.game.0.title': 'Game Started!',
+    'tutorial.game.0.text': 'Find as many words as you can from the matrix before time runs out. Longer words earn more points!',
+    'tutorial.game.1.title': 'Timer',
+    'tutorial.game.1.text': 'You have 2 minutes. When it hits zero, the game ends and points are tallied.',
+    'tutorial.game.2.title': 'Letter Matrix',
+    'tutorial.game.2.text': 'Tap cells in order or type on your keyboard. You can start picking letters fresh any time.',
+    'tutorial.game.3.title': 'Word Field',
+    'tutorial.game.3.text': "Your current word appears here. Confirm it with Enter or ✓ if it's valid.",
+    'tutorial.game.4.title': 'Hint',
+    'tutorial.game.4.text': 'Spend 150 KL for a hint — it reveals a few letters of a valid word you can make from the matrix.',
+    'tutorial.game.5.title': 'My Words',
+    'tutorial.game.5.text': "Tap this to see the words you've found. You can also dispute invalid words from here.",
+
+    // Tutorial — result
+    'tutorial.result.0.title': 'Game Over!',
+    'tutorial.result.0.text': 'Your results are ready! See how many points you scored and check which words you missed.',
+    'tutorial.result.1.title': 'Your Total Score',
+    'tutorial.result.1.text': "You earn points equal to the letters in each word you found. Words your opponent also found don't count.",
+    'tutorial.result.2.title': 'Missed Words',
+    'tutorial.result.2.text': "Words that could've been built from the matrix but you didn't find appear here. You'll do better next time!",
   },
 };
 
