@@ -1734,10 +1734,26 @@ const TRANSLATIONS = {
   },
 };
 
-let _lang = localStorage.getItem('verbum_lang') || 'tr';
+// game.js kendi 'verbum_lang' anahtarına, oyun mekaniği (harf havuzu/sözlük) henüz hazır
+// olmayan diller için CLAMP EDİLMİŞ (örn. 'de' seçilse bile 'tr') bir değer yazıyor. Eğer
+// arayüz dili de aynı anahtarı okusaydı, sayfa her yenilendiğinde kullanıcının seçtiği
+// arayüz dili sessizce bu clamp edilmiş değere düşerdi. Bu yüzden arayüz dili kendi ayrı
+// anahtarında (ham, clamp'siz) saklanır. 'verbum_lang' fallback'i sadece daha önce bu ayrı
+// anahtar hiç yazılmamış eski kullanıcıların TR/EN tercihini kaybetmemek için.
+const UI_LANG_KEY = 'verbum_ui_lang';
+let _lang = localStorage.getItem(UI_LANG_KEY) || localStorage.getItem('verbum_lang') || 'tr';
 
 export function setI18nLang(lang) {
   _lang = TRANSLATIONS[lang] ? lang : 'tr';
+  localStorage.setItem(UI_LANG_KEY, _lang);
+}
+
+// Ham (fallback'siz) seçili arayüz dilini döndürür — dil seçicideki hangi butonun
+// vurgulanacağını belirlemek için kullanılır. game.js'in getActiveLang()'i bundan
+// farklı olarak oyun mekaniği (harf havuzu/sözlük) için 'tr'ye düşen bir fallback
+// uygular; ikisi kasıtlı olarak ayrı tutulur.
+export function getI18nLang() {
+  return _lang;
 }
 
 export function t(key, vars = {}) {

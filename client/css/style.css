@@ -1678,6 +1678,7 @@ html, body {
 
 .toggle-group {
   display: flex;
+  flex-wrap: wrap;
   background: var(--surface2);
   border-radius: 10px;
   padding: 3px;
@@ -1868,6 +1869,8 @@ html, body {
 
 .auth-lang-bar {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
 }
 .auth-lang-btn {
@@ -1927,7 +1930,7 @@ html, body {
   color: var(--text-primary); margin-bottom: 28px;
 }
 .lang-picker-btns {
-  display: flex; gap: 16px; justify-content: center;
+  display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
 }
 .lang-picker-btn {
   display: flex; flex-direction: column; align-items: center; gap: 8px;

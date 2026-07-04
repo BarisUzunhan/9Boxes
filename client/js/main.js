@@ -1,5 +1,5 @@
 import { loadDictionary, getWordArray, switchDictionary } from './dictionary.js';
-import { t, applyLang, setI18nLang } from './i18n.js';
+import { t, applyLang, setI18nLang, getI18nLang } from './i18n.js';
 import { init as initTutorial, startLobby, startFill, startGame as startGameTutorial, startResult, showLobbyTutorial, onEnd as onTutorialEnd, end as endTutorial } from './tutorial.js';
 import {
   state, PHASES,
@@ -128,7 +128,10 @@ function loadSettings() {
   document.getElementById('btn-theme-dark').classList.toggle('active', theme !== 'light');
   document.getElementById('btn-theme-light').classList.toggle('active', theme === 'light');
 
-  applyLang(localStorage.getItem('verbum_lang') || 'tr');
+  // getI18nLang() zaten modül yüklenirken kendi ayrı ('verbum_ui_lang') anahtarından doğru
+  // değeri okumuş durumda — burada tekrar 'verbum_lang'i (oyun mekaniği clamp'i) okumak,
+  // henüz hazır olmayan dillerde (de/es/fr/pt) arayüzü sessizce Türkçe'ye geri çevirirdi.
+  applyLang(getI18nLang());
 
   const color = localStorage.getItem('9boxes_color') || 'default';
   applyColorTheme(color);
@@ -174,7 +177,10 @@ function openLangPicker() {
 // ─── Auth ekranı dil çubuğu ──────────────────────────────────
 
 function _updateAuthLangBtns() {
-  const lang = getActiveLang();
+  // Arayüz dilini (i18n) esas al, getActiveLang() değil — oyun mekaniği (harf
+  // havuzu/sözlük) henüz hazır olmayan diller (de/es/fr/pt) için sessizce 'tr'ye
+  // düşüyor, ama seçili butonun vurgusu kullanıcının GERÇEKTEN seçtiği dili göstermeli.
+  const lang = getI18nLang();
   document.querySelectorAll('.auth-lang-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.lang === lang)
   );
@@ -199,7 +205,10 @@ const LANG_NAMES = { tr: 'Türkçe', en: 'English', de: 'Deutsch', es: 'Español
 
 function showLangConfirmModal() {
   const modal = document.getElementById('lang-confirm-modal');
-  const lang = getActiveLang();
+  // Arayüz dilini (i18n) esas al — getActiveLang() henüz hazır olmayan diller için
+  // sessizce 'tr'ye düşüyor; bu modal kullanıcının GERÇEKTEN seçtiği dili göstermeli,
+  // yoksa applyLang(lang) burada arayüzü yanlışlıkla Türkçe'ye geri çevirir.
+  const lang = getI18nLang();
   document.getElementById('lang-confirm-current-text').textContent =
     t('lang.confirm.current', { name: LANG_NAMES[lang] || lang.toUpperCase() });
   applyLang(lang);
@@ -337,7 +346,8 @@ function openSettings() {
     btn.classList.toggle('active', parseInt(btn.dataset.dur) === _gameDuration);
   });
 
-  const activeLang = getActiveLang();
+  // Arayüz dilini (i18n) esas al — bkz. _updateAuthLangBtns'deki not.
+  const activeLang = getI18nLang();
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === activeLang));
 
   // Dil satırı: sadece lobi/fill fazında değiştirilebilir
@@ -2274,7 +2284,7 @@ socket.on('grp_join_error', ({ error }) => {
 function restoreOriginalLang() {
   const orig = localStorage.getItem('verbum_lang') || 'tr';
   setActiveLang(orig);
-  applyLang(orig);
+  applyLang(getI18nLang()); // arayüz dili ayrı anahtarda saklanıyor, bkz. loadSettings notu
   switchDictionary(orig);
 }
 

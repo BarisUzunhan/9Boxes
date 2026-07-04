@@ -24,8 +24,20 @@ async function _loadForLang(lang) {
   const mySeq = ++_loadSeq;
   const file = lang === 'tr' ? '/data/words.json' : `/data/words_${lang}.json`;
   const locale = LANG_LOCALE[lang] || 'en-US';
-  const res = await fetch(file);
-  const data = await res.json();
+  let data;
+  try {
+    const res = await fetch(file);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    // Bu dilin sözlüğü henüz hazır değil (örn. de/es/fr/pt) — sessizce çökmek/bozulmak
+    // yerine Türkçe sözlüğe düş (İngilizce'ye değil: game.js'teki harf havuzu/sesli harf
+    // fallback'i de LANG_CONFIGS'te olmayan diller için Türkçe'ye düşüyor ve sunucu
+    // tarafı da her yerde _wordSets['tr'] fallback'i kullanıyor — üçü tutarlı kalsın).
+    console.warn(`[dictionary] "${lang}" sözlüğü yüklenemedi, Türkçe sözlüğe düşülüyor:`, err.message);
+    if (lang !== 'tr') return _loadForLang('tr');
+    return;
+  }
   if (mySeq !== _loadSeq) return; // araya daha yeni bir dil değişimi girdi, bu sonucu yoksay
   _locale = locale;
   wordArray = data.words;
